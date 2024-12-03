@@ -44,7 +44,7 @@ import sun.reflect.Reflection;
 import sun.security.util.SecurityConstants;
 
 
-/**
+ /**
  * A <i>thread</i> is a thread of execution in a program. The Java
  * Virtual Machine allows an application to have multiple threads of
  * execution running concurrently.
@@ -72,7 +72,7 @@ import sun.security.util.SecurityConstants;
  *     method.
  * </ul>
  * <p>
- * There are two ways to create a new thread of execution. One is to
+ * There are two ways to create a new thread of execution. One is to  //*----------两种方式创建线程 1、继承Thread。2、实现Runnable
  * declare a class to be a subclass of <code>Thread</code>. This
  * subclass should override the <code>run</code> method of class
  * <code>Thread</code>. An instance of the subclass can then be
@@ -141,7 +141,7 @@ import sun.security.util.SecurityConstants;
  */
 public
 class Thread implements Runnable {
-    /* Make sure registerNatives is the first thing <clinit> does. */
+    /** Make sure registerNatives is the first thing <clinit> does. */
     private static native void registerNatives();
     static {
         registerNatives();
@@ -152,64 +152,64 @@ class Thread implements Runnable {
     private Thread         threadQ;
     private long           eetop;
 
-    /* Whether or not to single_step this thread. */
+    /** Whether or not to single_step this thread. */
     private boolean     single_step;
 
-    /* Whether or not the thread is a daemon thread. */
-    private boolean     daemon = false;
+    /** Whether or not the thread is a daemon thread. */
+    private boolean     daemon = false;         /* 默认非守护线程--也就是处理业务逻辑 */
 
-    /* JVM state */
+    /** JVM state */
     private boolean     stillborn = false;
 
-    /* What will be run. */
-    private Runnable target;
+    /** What will be run. */
+    private Runnable target;                     /* 业务逻辑  */
 
-    /* The group of this thread */
+    /** The group of this thread */
     private ThreadGroup group;
 
-    /* The context ClassLoader for this thread */
+    /** The context ClassLoader for this thread */
     private ClassLoader contextClassLoader;
 
-    /* The inherited AccessControlContext of this thread */
+    /** The inherited AccessControlContext of this thread */
     private AccessControlContext inheritedAccessControlContext;
 
-    /* For autonumbering anonymous threads. */
+    /** For autonumbering anonymous threads. */
     private static int threadInitNumber;
     private static synchronized int nextThreadNum() {
         return threadInitNumber++;
     }
 
-    /* ThreadLocal values pertaining to this thread. This map is maintained
+    /** ThreadLocal values pertaining to this thread. This map is maintained
      * by the ThreadLocal class. */
-    ThreadLocal.ThreadLocalMap threadLocals = null;
+    ThreadLocal.ThreadLocalMap threadLocals = null;    /* 每一个线程一个ThreadLocalMap，存放ThreadLocal变量 */
 
-    /*
+    /**
      * InheritableThreadLocal values pertaining to this thread. This map is
      * maintained by the InheritableThreadLocal class.
      */
     ThreadLocal.ThreadLocalMap inheritableThreadLocals = null;
 
-    /*
+    /**
      * The requested stack size for this thread, or 0 if the creator did
      * not specify a stack size.  It is up to the VM to do whatever it
      * likes with this number; some VMs will ignore it.
      */
     private long stackSize;
 
-    /*
+    /**
      * JVM-private state that persists after native thread termination.
      */
     private long nativeParkEventPointer;
 
-    /*
+    /**
      * Thread ID
      */
     private long tid;
 
-    /* For generating thread ID */
+    /** For generating thread ID */
     private static long threadSeqNumber;
 
-    /* Java thread status for tools,
+    /** Java thread status for tools,
      * initialized to indicate thread 'not yet started'
      */
 
@@ -226,16 +226,16 @@ class Thread implements Runnable {
      * Set by (private) java.util.concurrent.locks.LockSupport.setBlocker
      * Accessed using java.util.concurrent.locks.LockSupport.getBlocker
      */
-    volatile Object parkBlocker;
+    volatile Object parkBlocker;         /* 挂起原因，用户排查问题 */
 
-    /* The object in which this thread is blocked in an interruptible I/O
+    /** The object in which this thread is blocked in an interruptible I/O
      * operation, if any.  The blocker's interrupt method should be invoked
      * after setting this thread's interrupt status.
      */
     private volatile Interruptible blocker;
     private final Object blockerLock = new Object();
 
-    /* Set the blocker field; invoked via sun.misc.SharedSecrets from java.nio code
+    /** Set the blocker field; invoked via sun.misc.SharedSecrets from java.nio code
      */
     void blockedOn(Interruptible b) {
         synchronized (blockerLock) {
@@ -281,7 +281,7 @@ class Thread implements Runnable {
      * concurrency control constructs such as the ones in the
      * {@link java.util.concurrent.locks} package.
      */
-    public static native void yield();
+    public static native void yield();         //* 只是尝试释放CPU，并不会释放锁，Thread相关方法不会释放锁，Object相关同步接口才会释放锁
 
     /**
      * Causes the currently executing thread to sleep (temporarily cease
@@ -299,7 +299,7 @@ class Thread implements Runnable {
      *          if any thread has interrupted the current thread. The
      *          <i>interrupted status</i> of the current thread is
      *          cleared when this exception is thrown.
-     */
+     */                                    /* sleep(0) == yield() */
     public static native void sleep(long millis) throws InterruptedException;
 
     /**
@@ -376,26 +376,26 @@ class Thread implements Runnable {
         Thread parent = currentThread();
         SecurityManager security = System.getSecurityManager();
         if (g == null) {
-            /* Determine if it's an applet or not */
+            /** Determine if it's an applet or not */
 
-            /* If there is a security manager, ask the security manager
+            /** If there is a security manager, ask the security manager
                what to do. */
             if (security != null) {
                 g = security.getThreadGroup();
             }
 
-            /* If the security doesn't have a strong opinion of the matter
+            /** If the security doesn't have a strong opinion of the matter
                use the parent thread group. */
             if (g == null) {
                 g = parent.getThreadGroup();
             }
         }
 
-        /* checkAccess regardless of whether or not threadgroup is
+        /** checkAccess regardless of whether or not threadgroup is
            explicitly passed in. */
         g.checkAccess();
 
-        /*
+        /**
          * Do we have the required permissions?
          */
         if (security != null) {
@@ -420,10 +420,10 @@ class Thread implements Runnable {
         if (inheritThreadLocals && parent.inheritableThreadLocals != null)
             this.inheritableThreadLocals =
                 ThreadLocal.createInheritedMap(parent.inheritableThreadLocals);
-        /* Stash the specified stack size in case the VM cares */
+        /** Stash the specified stack size in case the VM cares */
         this.stackSize = stackSize;
 
-        /* Set thread ID */
+        /** Set thread ID */
         tid = nextThreadID();
     }
 
@@ -707,9 +707,9 @@ class Thread implements Runnable {
          * A zero status value corresponds to state "NEW".
          */
         if (threadStatus != 0)
-            throw new IllegalThreadStateException();
+            throw new IllegalThreadStateException();      /* 重复start()异常 */
 
-        /* Notify the group that this thread is about to be started
+        /** Notify the group that this thread is about to be started
          * so that it can be added to the group's list of threads
          * and the group's unstarted count can be decremented. */
         group.add(this);
@@ -724,7 +724,7 @@ class Thread implements Runnable {
                     group.threadStartFailed(this);
                 }
             } catch (Throwable ignore) {
-                /* do nothing. If start0 threw a Throwable then
+                /** do nothing. If start0 threw a Throwable then
                   it will be passed up the call stack */
             }
         }
@@ -763,9 +763,9 @@ class Thread implements Runnable {
             group.threadTerminated(this);
             group = null;
         }
-        /* Aggressively null out all reference fields: see bug 4006245 */
+        /** Aggressively null out all reference fields: see bug 4006245 */
         target = null;
-        /* Speed the release of some of these resources */
+        /** Speed the release of some of these resources */
         threadLocals = null;
         inheritableThreadLocals = null;
         inheritedAccessControlContext = null;
@@ -1243,7 +1243,7 @@ class Thread implements Runnable {
      *          <i>interrupted status</i> of the current thread is
      *          cleared when this exception is thrown.
      */
-    public final synchronized void join(long millis)
+    public final synchronized void join(long millis)   //* 等待当前线程执行结束
     throws InterruptedException {
         long base = System.currentTimeMillis();
         long now = 0;
@@ -1765,7 +1765,7 @@ class Thread implements Runnable {
          * reenter a synchronized block/method after calling
          * {@link Object#wait() Object.wait}.
          */
-        BLOCKED,
+        BLOCKED,          /* 阻塞等待获得锁 - synchronized */
 
         /**
          * Thread state for a waiting thread.
@@ -1786,7 +1786,7 @@ class Thread implements Runnable {
          * that object. A thread that has called <tt>Thread.join()</tt>
          * is waiting for a specified thread to terminate.
          */
-        WAITING,
+        WAITING,        /* 等待条件 - 无时间  - Object.wait()、Thread.join()、LockSupport.park() */
 
         /**
          * Thread state for a waiting thread with a specified waiting time.
@@ -1800,7 +1800,7 @@ class Thread implements Runnable {
          *   <li>{@link LockSupport#parkUntil LockSupport.parkUntil}</li>
          * </ul>
          */
-        TIMED_WAITING,
+        TIMED_WAITING, /* 等待条件 - 带时间 -  Thread.sleep、Object.wait(long)、Thread.join(long)、LockSupport.park(long) */
 
         /**
          * Thread state for a terminated thread.
@@ -2045,7 +2045,7 @@ class Thread implements Runnable {
     @sun.misc.Contended("tlr")
     int threadLocalRandomSecondarySeed;
 
-    /* Some private helper methods */
+    /** Some private helper methods */
     private native void setPriority0(int newPriority);
     private native void stop0(Object o);
     private native void suspend0();

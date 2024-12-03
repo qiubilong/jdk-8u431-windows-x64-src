@@ -169,7 +169,7 @@ public class LockSupport {
      *        thread parking
      * @since 1.6
      */
-    public static void park(Object blocker) {
+    public static void park(Object blocker) {  /* 挂起当前线程 ，blocker == 挂起原因，用于排查问题 */
         Thread t = Thread.currentThread();
         setBlocker(t, blocker);
         UNSAFE.park(false, 0L);

@@ -268,7 +268,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
     implements ConcurrentMap<K,V>, Serializable {
     private static final long serialVersionUID = 7249069246763182397L;
 
-    /*
+    /**
      * Overview:
      *
      * The primary design goal of this hash table is to maintain
@@ -588,7 +588,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      */
     private static final int RESIZE_STAMP_SHIFT = 32 - RESIZE_STAMP_BITS;
 
-    /*
+    /**
      * Encodings for Node hash fields. See above for explanation.
      */
     static final int MOVED     = -1; // hash for forwarding nodes
@@ -734,7 +734,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
 
     /* ---------------- Table element access -------------- */
 
-    /*
+    /**
      * Volatile access methods are used for table elements as well as
      * elements of in-progress next table while resizing.  All uses of
      * the tab arguments must be null checked by callers.  All callers
@@ -2223,7 +2223,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
     private final Node<K,V>[] initTable() {
         Node<K,V>[] tab; int sc;
         while ((tab = table) == null || tab.length == 0) {
-            if ((sc = sizeCtl) < 0)
+            if ((sc = sizeCtl) < 0) /* sizeCtl<0 说明已经有一个其他线程正在初始化Table,Thread.yield()让出CPU，让初始化Table线程更快完成 --> */
                 Thread.yield(); // lost initialization race; just spin
             else if (U.compareAndSwapInt(this, SIZECTL, sc, -1)) {
                 try {
