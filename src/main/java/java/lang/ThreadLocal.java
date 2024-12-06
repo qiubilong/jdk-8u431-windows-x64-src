@@ -73,7 +73,7 @@ import java.util.function.Supplier;
  * @author  Josh Bloch and Doug Lea
  * @since   1.2
  */
-public class ThreadLocal<T> {
+public class ThreadLocal<T> {  /* 线程私有变量 */
     /**
      * ThreadLocals rely on per-thread linear-probe hash maps attached
      * to each thread (Thread.threadLocals and
@@ -160,16 +160,16 @@ public class ThreadLocal<T> {
      */
     public T get() {
         Thread t = Thread.currentThread();
-        ThreadLocalMap map = getMap(t);
+        ThreadLocalMap map = getMap(t); /* t.ThreadLocalMap */
         if (map != null) {
             ThreadLocalMap.Entry e = map.getEntry(this);
-            if (e != null) {
+            if (e != null) { /* 找到变量 */
                 @SuppressWarnings("unchecked")
                 T result = (T)e.value;
                 return result;
             }
         }
-        return setInitialValue();
+        return setInitialValue(); /* 变量不存在，则设置初始值 */
     }
 
     /**
@@ -192,9 +192,9 @@ public class ThreadLocal<T> {
      * @return the initial value
      */
     private T setInitialValue() {
-        T value = initialValue();
+        T value = initialValue(); /* 子类提供初始值 */
         Thread t = Thread.currentThread();
-        ThreadLocalMap map = getMap(t);
+        ThreadLocalMap map = getMap(t); /* t.ThreadLocalMap */
         if (map != null) {
             map.set(this, value);
         } else {
@@ -217,7 +217,7 @@ public class ThreadLocal<T> {
      */
     public void set(T value) {
         Thread t = Thread.currentThread();
-        ThreadLocalMap map = getMap(t);
+        ThreadLocalMap map = getMap(t);/* t.ThreadLocalMap */
         if (map != null) {
             map.set(this, value);
         } else {
@@ -326,7 +326,7 @@ public class ThreadLocal<T> {
          * entry can be expunged from table.  Such entries are referred to
          * as "stale entries" in the code that follows.
          */
-        static class Entry extends WeakReference<ThreadLocal<?>> {
+        static class Entry extends WeakReference<ThreadLocal<?>> { /* 数据项 - 弱引用 - 没有强引用时发生GC就回收 */
             /** The value associated with this ThreadLocal. */
             Object value;
 
@@ -345,7 +345,7 @@ public class ThreadLocal<T> {
          * The table, resized as necessary.
          * table.length MUST always be a power of two.
          */
-        private Entry[] table;
+        private Entry[] table;   /* 数据项数组，使用线性探测法解决hash冲突 */
 
         /**
          * The number of entries in the table.
@@ -361,7 +361,7 @@ public class ThreadLocal<T> {
          * Set the resize threshold to maintain at worst a 2/3 load factor.
          */
         private void setThreshold(int len) {
-            threshold = len * 2 / 3;
+            threshold = len * 2 / 3; /* 扩容阈值，初始 threshold = 16*2/3 = 10 */
         }
 
         /**
@@ -432,12 +432,12 @@ public class ThreadLocal<T> {
          * @return the entry associated with key, or null if no such
          */
         private Entry getEntry(ThreadLocal<?> key) {
-            int i = key.threadLocalHashCode & (table.length - 1);
+            int i = key.threadLocalHashCode & (table.length - 1); /* 相当于 A % 2^N */
             Entry e = table[i];
-            if (e != null && e.get() == key)
+            if (e != null && e.get() == key) /* 找到数据 */
                 return e;
             else
-                return getEntryAfterMiss(key, i, e);
+                return getEntryAfterMiss(key, i, e);/* 线性探测 */
         }
 
         /**
@@ -457,10 +457,10 @@ public class ThreadLocal<T> {
                 ThreadLocal<?> k = e.get();
                 if (k == key)
                     return e;
-                if (k == null)
+                if (k == null)  /* 清理内存泄漏数据 */
                     expungeStaleEntry(i);
                 else
-                    i = nextIndex(i, len);
+                    i = nextIndex(i, len); /* 线性探测 */
                 e = tab[i];
             }
             return null;
@@ -481,25 +481,25 @@ public class ThreadLocal<T> {
 
             Entry[] tab = table;
             int len = tab.length;
-            int i = key.threadLocalHashCode & (len-1);
+            int i = key.threadLocalHashCode & (len-1); /* 索引下标 */
 
             for (Entry e = tab[i];
                  e != null;
-                 e = tab[i = nextIndex(i, len)]) {
+                 e = tab[i = nextIndex(i, len)]) { /* 线性探测 */
                 ThreadLocal<?> k = e.get();
 
-                if (k == key) {
+                if (k == key) { /* 覆盖旧值 */
                     e.value = value;
                     return;
                 }
 
-                if (k == null) {
+                if (k == null) { /* 发生内存泄漏 */
                     replaceStaleEntry(key, value, i);
                     return;
                 }
             }
 
-            tab[i] = new Entry(key, value);
+            tab[i] = new Entry(key, value); /* 找到空位，threshold控制了rehash阈值，保证数组一定是稀疏数组 */
             int sz = ++size;
             if (!cleanSomeSlots(i, sz) && sz >= threshold)
                 rehash();
@@ -607,23 +607,23 @@ public class ThreadLocal<T> {
          * (all between staleSlot and this slot will have been checked
          * for expunging).
          */
-        private int expungeStaleEntry(int staleSlot) {
+        private int expungeStaleEntry(int staleSlot) { /* 删除无效数据 - 内存泄漏数据 */
             Entry[] tab = table;
             int len = tab.length;
 
             // expunge entry at staleSlot
-            tab[staleSlot].value = null;
+            tab[staleSlot].value = null; /* 释放内存 */
             tab[staleSlot] = null;
             size--;
 
             // Rehash until we encounter null
             Entry e;
             int i;
-            for (i = nextIndex(staleSlot, len);
+            for (i = nextIndex(staleSlot, len);/* 线性遍历 */
                  (e = tab[i]) != null;
                  i = nextIndex(i, len)) {
                 ThreadLocal<?> k = e.get();
-                if (k == null) {
+                if (k == null) { /* 清理内存泄漏 */
                     e.value = null;
                     tab[i] = null;
                     size--;
@@ -692,7 +692,7 @@ public class ThreadLocal<T> {
             expungeStaleEntries();
 
             // Use lower threshold for doubling to avoid hysteresis
-            if (size >= threshold - threshold / 4)
+            if (size >= threshold - threshold / 4) /*  使用线性探测法时一定要保证稀疏数组， threshold = len（16） * 2 / 3 = 10 */
                 resize();
         }
 
@@ -702,7 +702,7 @@ public class ThreadLocal<T> {
         private void resize() {
             Entry[] oldTab = table;
             int oldLen = oldTab.length;
-            int newLen = oldLen * 2;
+            int newLen = oldLen * 2; /* 扩容一倍 */
             Entry[] newTab = new Entry[newLen];
             int count = 0;
 
@@ -715,7 +715,7 @@ public class ThreadLocal<T> {
                     } else {
                         int h = k.threadLocalHashCode & (newLen - 1);
                         while (newTab[h] != null)
-                            h = nextIndex(h, newLen);
+                            h = nextIndex(h, newLen); /* 线性探测 */
                         newTab[h] = e;
                         count++;
                     }

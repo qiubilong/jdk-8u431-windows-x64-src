@@ -1243,7 +1243,7 @@ class Thread implements Runnable {
      *          <i>interrupted status</i> of the current thread is
      *          cleared when this exception is thrown.
      */
-    public final synchronized void join(long millis)   //* 等待当前线程执行结束
+    public final synchronized void join(long millis)   /*  等待当前线程执行结束  */
     throws InterruptedException {
         long base = System.currentTimeMillis();
         long now = 0;
@@ -1254,15 +1254,15 @@ class Thread implements Runnable {
 
         if (millis == 0) {
             while (isAlive()) {
-                wait(0);
+                wait(0);  /* 挂起调用者线程 */
             }
         } else {
-            while (isAlive()) {
+            while (isAlive()) {   /* 等待的线程对象是否结束 */
                 long delay = millis - now;
                 if (delay <= 0) {
                     break;
                 }
-                wait(delay);
+                wait(delay);     /* 挂起调用者线程 */
                 now = System.currentTimeMillis() - base;
             }
         }

@@ -45,7 +45,7 @@ package java.lang.ref;
  * @since    1.2
  */
 
-public class WeakReference<T> extends Reference<T> {
+public class WeakReference<T> extends Reference<T> {  /* 弱引用 - 没有强引用关联时发生GC就回收 */
 
     /**
      * Creates a new weak reference that refers to the given object.  The new

@@ -175,14 +175,14 @@ public class PipedReader extends Reader {
         }
 
         writeSide = Thread.currentThread();
-        while (in == out) {
+        while (in == out) {       /* 有一个新数据 */
             if ((readSide != null) && !readSide.isAlive()) {
                 throw new IOException("Pipe broken");
             }
-            /* full: kick any waiting readers */
+            /** full: kick any waiting readers */
             notifyAll();
             try {
-                wait(1000);
+                wait(1000); /* 挂起写线程 */
             } catch (InterruptedException ex) {
                 throw new java.io.InterruptedIOException();
             }
@@ -244,16 +244,16 @@ public class PipedReader extends Reader {
         int trials = 2;
         while (in < 0) {
             if (closedByWriter) {
-                /* closed by writer, return EOF */
+                /** closed by writer, return EOF */
                 return -1;
             }
             if ((writeSide != null) && (!writeSide.isAlive()) && (--trials < 0)) {
                 throw new IOException("Pipe broken");
             }
-            /* might be a writer waiting */
+            /** might be a writer waiting */
             notifyAll();
             try {
-                wait(1000);
+                wait(1000); /* 挂起当前线程 */
             } catch (InterruptedException ex) {
                 throw new java.io.InterruptedIOException();
             }
@@ -263,7 +263,7 @@ public class PipedReader extends Reader {
             out = 0;
         }
         if (in == out) {
-            /* now empty */
+            /** now empty */
             in = -1;
         }
         return ret;

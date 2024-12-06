@@ -109,7 +109,7 @@ import java.util.concurrent.locks.LockSupport;
  */
 public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 
-    /*
+    /**
      * Overview:
      *
      * A CompletableFuture may have dependent completion actions,
