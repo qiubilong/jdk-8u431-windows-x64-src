@@ -846,14 +846,14 @@ public class ArrayList<E> extends AbstractList<E>
      * An optimized version of AbstractList.Itr
      */
     private class Itr implements Iterator<E> {
-        int cursor;       // index of next element to return
-        int lastRet = -1; // index of last element returned; -1 if no such
+        int cursor;       // index of next element to return  -- 下一个数据下标
+        int lastRet = -1; // index of last element returned; -1 if no such -- 最后访问数据下标
         int expectedModCount = modCount;
 
         Itr() {}
 
         public boolean hasNext() {
-            return cursor != size;
+            return cursor != size; // cursor < size
         }
 
         @SuppressWarnings("unchecked")
@@ -869,7 +869,7 @@ public class ArrayList<E> extends AbstractList<E>
             return (E) elementData[lastRet = i];
         }
 
-        public void remove() {
+        public void remove() {  /* 直接删除最后一个访问的数据 */
             if (lastRet < 0)
                 throw new IllegalStateException();
             checkForComodification();
