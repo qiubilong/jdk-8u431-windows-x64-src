@@ -95,7 +95,7 @@ public class CopyOnWriteArrayList<E>
     private static final long serialVersionUID = 8673264195747942595L;
 
     /** The lock protecting all mutators */
-    final transient ReentrantLock lock = new ReentrantLock();
+    final transient ReentrantLock lock = new ReentrantLock(); /* 可重入独占显示锁 */
 
     /** The array, accessed only via getArray/setArray. */
     private transient volatile Object[] array;
@@ -433,13 +433,13 @@ public class CopyOnWriteArrayList<E>
      */
     public boolean add(E e) {
         final ReentrantLock lock = this.lock;
-        lock.lock();
+        lock.lock(); /* 独占锁 */
         try {
             Object[] elements = getArray();
             int len = elements.length;
-            Object[] newElements = Arrays.copyOf(elements, len + 1);
+            Object[] newElements = Arrays.copyOf(elements, len + 1);/* 复制数组 */
             newElements[len] = e;
-            setArray(newElements);
+            setArray(newElements); /* 替换数组 */
             return true;
         } finally {
             lock.unlock();
@@ -1132,9 +1132,9 @@ public class CopyOnWriteArrayList<E>
             (getArray(), Spliterator.IMMUTABLE | Spliterator.ORDERED);
     }
 
-    static final class COWIterator<E> implements ListIterator<E> {
+    static final class COWIterator<E> implements ListIterator<E> { // for(x:x)迭代器
         /** Snapshot of the array */
-        private final Object[] snapshot;
+        private final Object[] snapshot; /* 数据快照 */
         /** Index of element to be returned by subsequent call to next.  */
         private int cursor;
 

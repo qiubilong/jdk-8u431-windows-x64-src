@@ -112,7 +112,7 @@ public class ArrayList<E> extends AbstractList<E>
     /**
      * Default initial capacity.
      */
-    private static final int DEFAULT_CAPACITY = 10;
+    private static final int DEFAULT_CAPACITY = 10; /* 默认10个 */
 
     /**
      * Shared empty array instance used for empty instances.
@@ -132,7 +132,7 @@ public class ArrayList<E> extends AbstractList<E>
      * empty ArrayList with elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA
      * will be expanded to DEFAULT_CAPACITY when the first element is added.
      */
-    transient Object[] elementData; // non-private to simplify nested class access
+    transient Object[] elementData; // non-private to simplify nested class access 数据数组
 
     /**
      * The size of the ArrayList (the number of elements it contains).
@@ -163,7 +163,7 @@ public class ArrayList<E> extends AbstractList<E>
      * Constructs an empty list with an initial capacity of ten.
      */
     public ArrayList() {
-        this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
+        this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA; /* 默认空数组，添加数据时初始化长度10的数组 */
     }
 
     /**
@@ -230,14 +230,14 @@ public class ArrayList<E> extends AbstractList<E>
     }
 
     private void ensureCapacityInternal(int minCapacity) {
-        ensureExplicitCapacity(calculateCapacity(elementData, minCapacity));
+        ensureExplicitCapacity(calculateCapacity(elementData, minCapacity));// 检查数组大小 calculateCapacity(elementData, minCapacity)
     }
 
-    private void ensureExplicitCapacity(int minCapacity) {
+    private void ensureExplicitCapacity(int minCapacity) { /* minCapacity == 需要的数组长度 */
         modCount++;
 
         // overflow-conscious code
-        if (minCapacity - elementData.length > 0)
+        if (minCapacity - elementData.length > 0) /* 数组长度不够，扩容 */
             grow(minCapacity);
     }
 
@@ -258,13 +258,13 @@ public class ArrayList<E> extends AbstractList<E>
     private void grow(int minCapacity) {
         // overflow-conscious code
         int oldCapacity = elementData.length;
-        int newCapacity = oldCapacity + (oldCapacity >> 1);
+        int newCapacity = oldCapacity + (oldCapacity >> 1); /* 数组长度扩容1.5倍 */
         if (newCapacity - minCapacity < 0)
             newCapacity = minCapacity;
         if (newCapacity - MAX_ARRAY_SIZE > 0)
             newCapacity = hugeCapacity(minCapacity);
         // minCapacity is usually close to size, so this is a win:
-        elementData = Arrays.copyOf(elementData, newCapacity);
+        elementData = Arrays.copyOf(elementData, newCapacity); /* 复制数组 */
     }
 
     private static int hugeCapacity(int minCapacity) {

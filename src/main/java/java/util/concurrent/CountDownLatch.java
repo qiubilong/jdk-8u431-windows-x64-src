@@ -169,19 +169,19 @@ public class CountDownLatch {
             return getState();
         }
 
-        protected int tryAcquireShared(int acquires) {
+        protected int tryAcquireShared(int acquires) {  /* await()调用 --> state!=0 时加入同步队列   */
             return (getState() == 0) ? 1 : -1;
         }
 
-        protected boolean tryReleaseShared(int releases) {
+        protected boolean tryReleaseShared(int releases) { /* countDown()调用 --> 资源减1 */
             // Decrement count; signal when transition to zero
-            for (;;) {
+            for (;;) {/* 循环CAS，直到state = 0 */
                 int c = getState();
                 if (c == 0)
                     return false;
                 int nextc = c-1;
                 if (compareAndSetState(c, nextc))
-                    return nextc == 0;
+                    return nextc == 0; /* 最后一个 */
             }
         }
     }
@@ -287,8 +287,8 @@ public class CountDownLatch {
      *
      * <p>If the current count equals zero then nothing happens.
      */
-    public void countDown() {
-        sync.releaseShared(1);
+    public void countDown() {/* 资源减1 */
+        sync.releaseShared(1);// 相当于共享锁
     }
 
     /**

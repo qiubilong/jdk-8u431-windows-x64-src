@@ -135,7 +135,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                     return true;
                 }
             }
-            else if (current == getExclusiveOwnerThread()) { /* 重入加锁 */
+            else if (current == getExclusiveOwnerThread()) { /* 可重入加锁 */
                 int nextc = c + acquires;
                 if (nextc < 0) // overflow
                     throw new Error("Maximum lock count exceeded");
@@ -145,7 +145,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             return false;
         }
 
-        protected final boolean tryRelease(int releases) { /* 释放锁 */
+        protected final boolean tryRelease(int releases) { /* 释放锁  - unlock() 调用 */
             int c = getState() - releases;
             if (Thread.currentThread() != getExclusiveOwnerThread()) /* 保证是当前线程 */
                 throw new IllegalMonitorStateException();
@@ -203,10 +203,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * acquire on failure.
          */
         final void lock() {
-            if (compareAndSetState(0, 1)) /* 实现非公平锁的关键点，尝试一次插队加锁 */
+            if (compareAndSetState(0, 1)) /* 实现非公平锁的关键点，不管获锁等待队列空不空，直接尝试一次插队加锁 */
                 setExclusiveOwnerThread(Thread.currentThread());
             else
-                acquire(1);
+                acquire(1); /* 父类AQS公共加锁逻辑，加锁不成功入等待队列并挂起*/
         }
 
         protected final boolean tryAcquire(int acquires) {
@@ -228,17 +228,17 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * Fair version of tryAcquire.  Don't grant access unless
          * recursive call or no waiters or is first.
          */
-        protected final boolean tryAcquire(int acquires) {    /* 首先尝试获取，不成功再加入等待队列 */
+        protected final boolean tryAcquire(int acquires) {    /* 尝试一次加锁，不成功再加入等待队列 */
             final Thread current = Thread.currentThread();
             int c = getState();
             if (c == 0) {
-                if (!hasQueuedPredecessors() && /* 实现公平锁关键点，队列为空时才能尝试加锁，否则去排队 */             
+                if (!hasQueuedPredecessors() && /* 公平锁关键点，队列为空时才能尝试加锁，否则去排队 */
                     compareAndSetState(0, acquires)) { /* cas加锁成功 */
                     setExclusiveOwnerThread(current);
                     return true;
                 }
             }
-            else if (current == getExclusiveOwnerThread()) {  /* 支持重入加锁 */
+            else if (current == getExclusiveOwnerThread()) {  /* 可重入加锁 */
                 int nextc = c + acquires;
                 if (nextc < 0)
                     throw new Error("Maximum lock count exceeded");
