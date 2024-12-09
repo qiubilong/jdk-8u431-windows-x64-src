@@ -896,7 +896,7 @@ public class CopyOnWriteArrayList<E>
         }
     }
 
-    public boolean removeIf(Predicate<? super E> filter) {
+    public boolean removeIf(Predicate<? super E> filter) { /* 过滤条件删除 */
         if (filter == null) throw new NullPointerException();
         final ReentrantLock lock = this.lock;
         lock.lock();
