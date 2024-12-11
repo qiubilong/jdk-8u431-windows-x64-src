@@ -530,7 +530,7 @@ public abstract class AbstractQueuedSynchronizer
     /**
      * The synchronization state.
      */
-    private volatile int state;               /* 资源状态 */
+    private volatile int state;               /* 锁资源状态 */
 
     /**
      * Returns the current value of synchronization state.
@@ -686,7 +686,7 @@ public abstract class AbstractQueuedSynchronizer
                 if (ws == Node.SIGNAL) {
                     if (!compareAndSetWaitStatus(h, Node.SIGNAL, 0))
                         continue;            // loop to recheck cases
-                    unparkSuccessor(h);/* 唤醒首部节点线程 */
+                    unparkSuccessor(h);
                 }
                 else if (ws == 0 &&
                          !compareAndSetWaitStatus(h, 0, Node.PROPAGATE))
@@ -1072,7 +1072,7 @@ public abstract class AbstractQueuedSynchronizer
      *         correctly.
      * @throws UnsupportedOperationException if exclusive mode is not supported
      */
-    protected boolean tryAcquire(int arg) {
+    protected boolean tryAcquire(int arg) {/* 独占锁 -- 加锁 */
         throw new UnsupportedOperationException();
     }
 
@@ -1098,7 +1098,7 @@ public abstract class AbstractQueuedSynchronizer
      *         correctly.
      * @throws UnsupportedOperationException if exclusive mode is not supported
      */
-    protected boolean tryRelease(int arg) {
+    protected boolean tryRelease(int arg) { /* 独占锁 -- 释放锁 */
         throw new UnsupportedOperationException();
     }
 
@@ -1134,7 +1134,7 @@ public abstract class AbstractQueuedSynchronizer
      *         correctly.
      * @throws UnsupportedOperationException if shared mode is not supported
      */
-    protected int tryAcquireShared(int arg) {
+    protected int tryAcquireShared(int arg) {/* 共享锁 -- 加锁 */
         throw new UnsupportedOperationException();
     }
 
@@ -1159,7 +1159,7 @@ public abstract class AbstractQueuedSynchronizer
      *         correctly.
      * @throws UnsupportedOperationException if shared mode is not supported
      */
-    protected boolean tryReleaseShared(int arg) {
+    protected boolean tryReleaseShared(int arg) {/* 共享锁 -- 释放锁 */
         throw new UnsupportedOperationException();
     }
 
@@ -1296,7 +1296,7 @@ public abstract class AbstractQueuedSynchronizer
      * you like.
      * @throws InterruptedException if the current thread is interrupted
      */
-    public final void acquireSharedInterruptibly(int arg)
+    public final void acquireSharedInterruptibly(int arg) /* 获取共享锁 */
             throws InterruptedException {
         if (Thread.interrupted())
             throw new InterruptedException();
@@ -1671,7 +1671,7 @@ public abstract class AbstractQueuedSynchronizer
         /**
          * If cannot change waitStatus, the node has been cancelled.
          */
-        if (!compareAndSetWaitStatus(node, Node.CONDITION, 0))/* 重置等待状态不成功，说明线程节点已经取消 */
+        if (!compareAndSetWaitStatus(node, Node.CONDITION, 0))//非条件等待队列节点
             return false;
 
         /**
@@ -1880,7 +1880,7 @@ public abstract class AbstractQueuedSynchronizer
          * Removes and transfers all nodes.
          * @param first (non-null) the first node on condition queue
          */
-        private void doSignalAll(Node first) {
+        private void doSignalAll(Node first) {/* 迁移条件等待队列 - 所有节点 --> 获锁同步队列 */
             lastWaiter = firstWaiter = null;
             do {
                 Node next = first.nextWaiter;
@@ -2065,8 +2065,8 @@ public abstract class AbstractQueuedSynchronizer
                 throws InterruptedException {
             if (Thread.interrupted())
                 throw new InterruptedException();
-            Node node = addConditionWaiter();
-            int savedState = fullyRelease(node);
+            Node node = addConditionWaiter(); /* 加入条件等待队列队尾 */
+            int savedState = fullyRelease(node); /* 释放锁 */
             final long deadline = System.nanoTime() + nanosTimeout;
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {

@@ -153,7 +153,7 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer;
  * @since 1.5
  * @author Doug Lea
  */
-public class CountDownLatch {
+public class CountDownLatch {  /*  闭锁 - 倒计数器( 等待 volatile int state为0)。典型应用场景是主线程把一个大任务分成小任务交给一组线程执行，主线程等待它们结束汇总任务  */
     /**
      * Synchronization control For CountDownLatch.
      * Uses AQS state to represent count.
@@ -169,19 +169,19 @@ public class CountDownLatch {
             return getState();
         }
 
-        protected int tryAcquireShared(int acquires) {  /* await()调用 --> state!=0 时加入同步队列   */
+        protected int tryAcquireShared(int acquires) { /* CountDownLatch.await()调用，返回-1代表获锁失败 --> 加入获锁同步队列  */
             return (getState() == 0) ? 1 : -1;
         }
 
-        protected boolean tryReleaseShared(int releases) { /* countDown()调用 --> 资源减1 */
+        protected boolean tryReleaseShared(int releases) { /* countDown()调用，锁资源减1 */
             // Decrement count; signal when transition to zero
-            for (;;) {/* 循环CAS，直到state = 0 */
+            for (;;) {
                 int c = getState();
                 if (c == 0)
                     return false;
                 int nextc = c-1;
                 if (compareAndSetState(c, nextc))
-                    return nextc == 0; /* 最后一个 */
+                    return nextc == 0; /* 最后一个线程锁资源减1成功的线程 state==0，唤醒 CountDownLatch.await()等待者 */
             }
         }
     }
@@ -287,8 +287,8 @@ public class CountDownLatch {
      *
      * <p>If the current count equals zero then nothing happens.
      */
-    public void countDown() {/* 资源减1 */
-        sync.releaseShared(1);// 相当于共享锁
+    public void countDown() { /* 锁资源减1 */
+        sync.releaseShared(1);
     }
 
     /**
