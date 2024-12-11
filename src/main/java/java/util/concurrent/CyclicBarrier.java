@@ -234,7 +234,7 @@ public class CyclicBarrier {  /* 可循环使用屏障 */
                         trip.await();/* 加入条件等待队列，等待 count==0 时执行 trip.signalAll()唤醒 */
                     else if (nanos > 0L)
                         nanos = trip.awaitNanos(nanos);
-                } catch (InterruptedException ie) {
+                } catch (InterruptedException ie) {//中断异常
                     if (g == generation && ! g.broken) {
                         breakBarrier();
                         throw ie;
@@ -242,17 +242,17 @@ public class CyclicBarrier {  /* 可循环使用屏障 */
                         // We're about to finish waiting even if we had not
                         // been interrupted, so this interrupt is deemed to
                         // "belong" to subsequent execution.
-                        Thread.currentThread().interrupt();
+                        Thread.currentThread().interrupt();//恢复中断标记
                     }
                 }
 
                 if (g.broken)
                     throw new BrokenBarrierException();
 
-                if (g != generation)
+                if (g != generation) /* 唤醒后正常返回 */
                     return index;
 
-                if (timed && nanos <= 0L) {
+                if (timed && nanos <= 0L) {/* 等待超时 */
                     breakBarrier();
                     throw new TimeoutException();
                 }

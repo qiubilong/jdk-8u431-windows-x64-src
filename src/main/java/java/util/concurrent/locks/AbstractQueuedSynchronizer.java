@@ -2075,18 +2075,18 @@ public abstract class AbstractQueuedSynchronizer
                     break;
                 }
                 if (nanosTimeout >= spinForTimeoutThreshold)
-                    LockSupport.parkNanos(this, nanosTimeout);
+                    LockSupport.parkNanos(this, nanosTimeout); /* 挂起线程 */
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
                     break;
-                nanosTimeout = deadline - System.nanoTime();
+                nanosTimeout = deadline - System.nanoTime(); /* 因为可能被中断唤醒，需要重新计算挂起时间 */
             }
-            if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
+            if (acquireQueued(node, savedState) && interruptMode != THROW_IE) /* 线程节点被迁移到获锁同步队列后，等待获锁，获锁成功返回 */
                 interruptMode = REINTERRUPT;
             if (node.nextWaiter != null)
                 unlinkCancelledWaiters();
             if (interruptMode != 0)
                 reportInterruptAfterWait(interruptMode);
-            return deadline - System.nanoTime();
+            return deadline - System.nanoTime();/* 返回<0 说明超时后才返回 */
         }
 
         /**
