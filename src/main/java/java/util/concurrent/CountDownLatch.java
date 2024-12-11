@@ -288,7 +288,7 @@ public class CountDownLatch {  /*  闭锁 - 倒计数器( 等待 volatile int st
      * <p>If the current count equals zero then nothing happens.
      */
     public void countDown() { /* 锁资源减1 */
-        sync.releaseShared(1);
+        sync.releaseShared(1); /* state==0时，唤醒获锁同步队列首节点 */
     }
 
     /**

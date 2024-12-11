@@ -686,7 +686,7 @@ public abstract class AbstractQueuedSynchronizer
                 if (ws == Node.SIGNAL) {
                     if (!compareAndSetWaitStatus(h, Node.SIGNAL, 0))
                         continue;            // loop to recheck cases
-                    unparkSuccessor(h);
+                    unparkSuccessor(h);/* 唤醒获锁同步队列首节点线程 */
                 }
                 else if (ws == 0 &&
                          !compareAndSetWaitStatus(h, 0, Node.PROPAGATE))
@@ -1683,7 +1683,7 @@ public abstract class AbstractQueuedSynchronizer
         Node p = enq(node); /* 节点node加入获锁同步队列队尾，重新排队获锁 */
         int ws = p.waitStatus;
         if (ws > 0 || !compareAndSetWaitStatus(p, ws, Node.SIGNAL))
-            LockSupport.unpark(node.thread);  //如果线程取消等待，则唤醒线程
+            LockSupport.unpark(node.thread);  /* 如果获锁同步队列前一个节点线程取消排队就直接唤醒本节点线程，否则就等syn.release()释放锁时唤醒获锁同步队列首节点线程竞争获锁 */
         return true;
     }
 
@@ -1934,7 +1934,7 @@ public abstract class AbstractQueuedSynchronizer
          * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
          *         returns {@code false}
          */
-        public final void signal() { /* 迁移 - 条件等待队列 - 首线程节点 --> 获锁同步队列 */
+        public final void signal() { /* 迁移 - 条件等待队列- 首线程节点 --> 获锁同步队列 */
             if (!isHeldExclusively())//保证持有锁
                 throw new IllegalMonitorStateException();
             Node first = firstWaiter;
