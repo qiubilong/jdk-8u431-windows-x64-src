@@ -619,8 +619,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
     static class Node<K,V> implements Map.Entry<K,V> {
         final int hash;
         final K key;
-        volatile V val;
-        volatile Node<K,V> next;
+        volatile V val; /* 节点数据 */
+        volatile Node<K,V> next; /* 链表指针，哈希冲突时指向下一个节点 */
 
         Node(int hash, K key, V val, Node<K,V> next) {
             this.hash = hash;
@@ -770,7 +770,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * The array of bins. Lazily initialized upon first insertion.
      * Size is always a power of two. Accessed directly by iterators.
      */
-    transient volatile Node<K,V>[] table;
+    transient volatile Node<K,V>[] table;  /* 节点数组，默认16个 */
 
     /**
      * The next table to use; non-null only while resizing.
@@ -1835,27 +1835,27 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                      BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         if (key == null || remappingFunction == null)
             throw new NullPointerException();
-        int h = spread(key.hashCode());
+        int h = spread(key.hashCode());/* key哈希值*/
         V val = null;
         int delta = 0;
         int binCount = 0;
-        for (Node<K,V>[] tab = table;;) {
+        for (Node<K,V>[] tab = table;;) {/* 循环CAS */
             Node<K,V> f; int n, i, fh;
             if (tab == null || (n = tab.length) == 0)
-                tab = initTable();
-            else if ((f = tabAt(tab, i = (n - 1) & h)) == null) {
+                tab = initTable();/*  初始化table数组 */
+            else if ((f = tabAt(tab, i = (n - 1) & h)) == null) { /*  key索引下标对应的节点为null */
                 Node<K,V> r = new ReservationNode<K,V>();
                 synchronized (r) {
-                    if (casTabAt(tab, i, null, r)) {
+                    if (casTabAt(tab, i, null, r)) {/* 节点为空时，使用CAS保证只有一个线程创建节点 */
                         binCount = 1;
                         Node<K,V> node = null;
                         try {
-                            if ((val = remappingFunction.apply(key, null)) != null) {
+                            if ((val = remappingFunction.apply(key, null)) != null) {/* 回调获取节点值 */
                                 delta = 1;
                                 node = new Node<K,V>(h, key, val, null);
                             }
                         } finally {
-                            setTabAt(tab, i, node);
+                            setTabAt(tab, i, node); /* 新节点保存 */
                         }
                     }
                 }
@@ -1865,19 +1865,19 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
             else if ((fh = f.hash) == MOVED)
                 tab = helpTransfer(tab, f);
             else {
-                synchronized (f) {
+                synchronized (f) {/*  key索引下标对应的数组节点存在，多个线程排队修改 */
                     if (tabAt(tab, i) == f) {
-                        if (fh >= 0) {
+                        if (fh >= 0) {//链表
                             binCount = 1;
-                            for (Node<K,V> e = f, pred = null;; ++binCount) {
+                            for (Node<K,V> e = f, pred = null;; ++binCount) { /* 遍历节点链表 */
                                 K ek;
                                 if (e.hash == h &&
                                     ((ek = e.key) == key ||
-                                     (ek != null && key.equals(ek)))) {
+                                     (ek != null && key.equals(ek)))) {/* 找到目标节点 */
                                     val = remappingFunction.apply(key, e.val);
                                     if (val != null)
-                                        e.val = val;
-                                    else {
+                                        e.val = val; /* 替换目标节点值 */
+                                    else {  //如果目标节点，val为空，则删除节点
                                         delta = -1;
                                         Node<K,V> en = e.next;
                                         if (pred != null)
@@ -1885,21 +1885,21 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                                         else
                                             setTabAt(tab, i, en);
                                     }
-                                    break;
+                                    break;/* 找到目标节点，返回 */
                                 }
                                 pred = e;
-                                if ((e = e.next) == null) {
+                                if ((e = e.next) == null) { /* 遍历下一个节点 */
                                     val = remappingFunction.apply(key, null);
                                     if (val != null) {
                                         delta = 1;
-                                        pred.next =
+                                        pred.next =  /* 下一个节点为空，即没找到目标节点，在链表尾部插入节点，成功返回 */
                                             new Node<K,V>(h, key, val, null);
                                     }
                                     break;
                                 }
                             }
                         }
-                        else if (f instanceof TreeBin) {
+                        else if (f instanceof TreeBin) {//红黑树
                             binCount = 1;
                             TreeBin<K,V> t = (TreeBin<K,V>)f;
                             TreeNode<K,V> r, p;
@@ -2228,9 +2228,9 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
             else if (U.compareAndSwapInt(this, SIZECTL, sc, -1)) {
                 try {
                     if ((tab = table) == null || tab.length == 0) {
-                        int n = (sc > 0) ? sc : DEFAULT_CAPACITY;
+                        int n = (sc > 0) ? sc : DEFAULT_CAPACITY; //DEFAULT_CAPACITY == 16
                         @SuppressWarnings("unchecked")
-                        Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n];
+                        Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n];/* 数组table默认大小16个 */
                         table = tab = nt;
                         sc = n - (n >>> 2);
                     }

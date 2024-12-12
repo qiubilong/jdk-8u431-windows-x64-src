@@ -1010,31 +1010,31 @@ public abstract class AbstractQueuedSynchronizer
      * @param nanosTimeout max wait time
      * @return {@code true} if acquired
      */
-    private boolean doAcquireSharedNanos(int arg, long nanosTimeout)
+    private boolean doAcquireSharedNanos(int arg, long nanosTimeout) /* 超时获锁模式 */
             throws InterruptedException {
         if (nanosTimeout <= 0L)
             return false;
         final long deadline = System.nanoTime() + nanosTimeout;
-        final Node node = addWaiter(Node.SHARED);
+        final Node node = addWaiter(Node.SHARED); /* 加入获锁同步队列队尾 */
         boolean failed = true;
         try {
             for (;;) {
                 final Node p = node.predecessor();
-                if (p == head) {
+                if (p == head) { /* 首节点尝试获锁 */
                     int r = tryAcquireShared(arg);
                     if (r >= 0) {
                         setHeadAndPropagate(node, r);
                         p.next = null; // help GC
                         failed = false;
-                        return true;
+                        return true; /* 获锁成功返回 */
                     }
                 }
-                nanosTimeout = deadline - System.nanoTime();
-                if (nanosTimeout <= 0L)
+                nanosTimeout = deadline - System.nanoTime();/* 有可能中途被唤醒，重新计算等待时间 */
+                if (nanosTimeout <= 0L) /* 超时返回 */
                     return false;
-                if (shouldParkAfterFailedAcquire(p, node) &&
+                if (shouldParkAfterFailedAcquire(p, node) && //挂起前准备，pred.waitStatus= Node.SIGNAL
                     nanosTimeout > spinForTimeoutThreshold)
-                    LockSupport.parkNanos(this, nanosTimeout);
+                    LockSupport.parkNanos(this, nanosTimeout);/* 超时挂起 */
                 if (Thread.interrupted())
                     throw new InterruptedException();
             }
@@ -1320,12 +1320,12 @@ public abstract class AbstractQueuedSynchronizer
      * @return {@code true} if acquired; {@code false} if timed out
      * @throws InterruptedException if the current thread is interrupted
      */
-    public final boolean tryAcquireSharedNanos(int arg, long nanosTimeout)
+    public final boolean tryAcquireSharedNanos(int arg, long nanosTimeout) /* 限时获锁 */
             throws InterruptedException {
         if (Thread.interrupted())
             throw new InterruptedException();
-        return tryAcquireShared(arg) >= 0 ||
-            doAcquireSharedNanos(arg, nanosTimeout);
+        return tryAcquireShared(arg) >= 0 || /* 获锁成功 */
+            doAcquireSharedNanos(arg, nanosTimeout); /* 获锁失败时 -->  加入同步队列，限时获锁 */
     }
 
     /**

@@ -136,7 +136,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * @author Doug Lea
  */
-public class CyclicBarrier {  /* 可循环使用屏障 */
+public class CyclicBarrier {  /* 循环屏障 */
     /**
      * Each use of the barrier is represented as a generation instance.
      * The generation changes whenever the barrier is tripped, or
@@ -155,9 +155,9 @@ public class CyclicBarrier {  /* 可循环使用屏障 */
     /** The lock for guarding barrier entry */
     private final ReentrantLock lock = new ReentrantLock();
     /** Condition to wait on until tripped */
-    private final Condition trip = lock.newCondition(); /* 等待并屏障倒下的条件队列 */
+    private final Condition trip = lock.newCondition(); /* 等待触发屏障的条件队列 */
     /** The number of parties */
-    private final int parties; /* 线程数，不可变 */
+    private final int parties; /* 参与的线程数，不可变 */
     /** The command to run when tripped */
     private final Runnable barrierCommand; /* 所有线程达到屏障后，执行的业务逻辑，（可用于任务汇总，记录状态） */
     /** The current generation */

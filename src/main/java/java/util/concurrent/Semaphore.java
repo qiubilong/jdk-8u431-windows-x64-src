@@ -153,7 +153,7 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer;
  * @since 1.5
  * @author Doug Lea
  */
-public class Semaphore implements java.io.Serializable {
+public class Semaphore implements java.io.Serializable { /* 信号量 - 控制同时资源访问的线程数，可用于连接池，限流 */
     private static final long serialVersionUID = -3222578661600680210L;
     /** All mechanics via AbstractQueuedSynchronizer subclass */
     private final Sync sync;
@@ -174,13 +174,13 @@ public class Semaphore implements java.io.Serializable {
             return getState();
         }
 
-        final int nonfairTryAcquireShared(int acquires) {
+        final int nonfairTryAcquireShared(int acquires) { /* 非公平获取锁，不管队列有没有等待者 */
             for (;;) {
                 int available = getState();
                 int remaining = available - acquires;
                 if (remaining < 0 ||
                     compareAndSetState(available, remaining))
-                    return remaining;
+                    return remaining; /* 返回<0代表获取锁失败 --> 加入获锁同步队列等待获锁  */
             }
         }
 
@@ -191,7 +191,7 @@ public class Semaphore implements java.io.Serializable {
                 if (next < current) // overflow
                     throw new Error("Maximum permit count exceeded");
                 if (compareAndSetState(current, next))
-                    return true;
+                    return true; /* 释放锁 --> 唤醒获锁同步队列首节点线程  */
             }
         }
 
@@ -576,7 +576,7 @@ public class Semaphore implements java.io.Serializable {
      * @throws InterruptedException if the current thread is interrupted
      * @throws IllegalArgumentException if {@code permits} is negative
      */
-    public boolean tryAcquire(int permits, long timeout, TimeUnit unit)
+    public boolean tryAcquire(int permits, long timeout, TimeUnit unit) /* 限时获锁 */
         throws InterruptedException {
         if (permits < 0) throw new IllegalArgumentException();
         return sync.tryAcquireSharedNanos(permits, unit.toNanos(timeout));
