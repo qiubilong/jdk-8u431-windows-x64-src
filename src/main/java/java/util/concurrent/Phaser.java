@@ -258,8 +258,8 @@ import java.util.concurrent.locks.LockSupport;
  * @since 1.7
  * @author Doug Lea
  */
-public class Phaser {
-    /*
+public class Phaser { /* 阶段协同器，动态调整不同阶段的任务线程数，CountDownLatch和CyclicBarrier进阶版 */
+    /**
      * This class implements an extension of X10 "clocks".  Thanks to
      * Vijay Saraswat for the idea, and to Vivek Sarkar for
      * enhancements to extend functionality.
@@ -524,7 +524,7 @@ public class Phaser {
      * or greater than the maximum number of parties supported
      */
     public Phaser(int parties) {
-        this(null, parties);
+        this(null, parties); /* 初始化任务数 */
     }
 
     /**
@@ -588,7 +588,7 @@ public class Phaser {
      * than the maximum supported number of parties
      */
     public int register() {
-        return doRegister(1);
+        return doRegister(1);/* 增加一个任务数 */
     }
 
     /**

@@ -50,7 +50,7 @@ public interface BiFunction<T, U, R> {
      * @param u the second function argument
      * @return the function result
      */
-    R apply(T t, U u);
+    R apply(T t, U u); /* BiFunction中的Bi代表2，即有两个参数的意思。而Function只有一个参数 */
 
     /**
      * Returns a composed function that first applies this function to

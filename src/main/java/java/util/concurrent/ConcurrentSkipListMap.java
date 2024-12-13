@@ -113,9 +113,9 @@ import java.util.function.Function;
  * @param <V> the type of mapped values
  * @since 1.6
  */
-public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
+public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V> /* 跳表 */
     implements ConcurrentNavigableMap<K,V>, Cloneable, Serializable {
-    /*
+    /**
      * This class implements a tree-like two-dimensionally linked skip
      * list in which the index levels are represented in separate
      * nodes from the base nodes holding data.  There are two reasons

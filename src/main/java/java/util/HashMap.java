@@ -141,7 +141,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
 
     private static final long serialVersionUID = 362498820763181265L;
 
-    /*
+    /**
      * Implementation notes.
      *
      * This map usually acts as a binned (bucketed) hash table, but
@@ -195,7 +195,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * 5:    0.00015795
      * 6:    0.00001316
      * 7:    0.00000094
-     * 8:    0.00000006
+     * 8:    0.00000006   千万
      * more: less than 1 in ten million
      *
      * The root of a tree bin is normally its first node.  However,
@@ -234,7 +234,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     /**
      * The default initial capacity - MUST be a power of two.
      */
-    static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16
+    static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16 。默认初始大小16
 
     /**
      * The maximum capacity, used if a higher value is implicitly specified

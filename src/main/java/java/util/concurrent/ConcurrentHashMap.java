@@ -1009,14 +1009,14 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
     /** Implementation for put and putIfAbsent */
     final V putVal(K key, V value, boolean onlyIfAbsent) {
         if (key == null || value == null) throw new NullPointerException();
-        int hash = spread(key.hashCode());
+        int hash = spread(key.hashCode()); /* key哈希值*/
         int binCount = 0;
-        for (Node<K,V>[] tab = table;;) {
+        for (Node<K,V>[] tab = table;;) { /* 循环cas */
             Node<K,V> f; int n, i, fh;
             if (tab == null || (n = tab.length) == 0)
-                tab = initTable();
+                tab = initTable(); /* 数组延迟初始化 */
             else if ((f = tabAt(tab, i = (n - 1) & hash)) == null) {
-                if (casTabAt(tab, i, null,
+                if (casTabAt(tab, i, null, /* key哈希对应的数组节点为空，cas并发添加，成功返回 */
                              new Node<K,V>(hash, key, value, null)))
                     break;                   // no lock when adding to empty bin
             }
@@ -1024,22 +1024,22 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 tab = helpTransfer(tab, f);
             else {
                 V oldVal = null;
-                synchronized (f) {
+                synchronized (f) { /* key哈希对应的数组节点不空，线程synchronized排队修改 */
                     if (tabAt(tab, i) == f) {
                         if (fh >= 0) {
                             binCount = 1;
-                            for (Node<K,V> e = f;; ++binCount) {
+                            for (Node<K,V> e = f;; ++binCount) { /* 遍历key哈希对应的节点链表 */
                                 K ek;
                                 if (e.hash == hash &&
                                     ((ek = e.key) == key ||
                                      (ek != null && key.equals(ek)))) {
                                     oldVal = e.val;
-                                    if (!onlyIfAbsent)
+                                    if (!onlyIfAbsent) /* 找到链表节点，判断是否需要覆盖旧值 */
                                         e.val = value;
                                     break;
                                 }
                                 Node<K,V> pred = e;
-                                if ((e = e.next) == null) {
+                                if ((e = e.next) == null) { /* 未找到key对应的链表节点，直接在链表尾部添加元素 */
                                     pred.next = new Node<K,V>(hash, key,
                                                               value, null);
                                     break;
@@ -1059,8 +1059,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                     }
                 }
                 if (binCount != 0) {
-                    if (binCount >= TREEIFY_THRESHOLD)
-                        treeifyBin(tab, i);
+                    if (binCount >= TREEIFY_THRESHOLD) //TREEIFY_THRESHOLD == 8
+                        treeifyBin(tab, i); /* 是否不得不转换红黑树，哈希冲突链表节点长度很少概率能达到8，所以转换红黑树的概率很小 */
                     if (oldVal != null)
                         return oldVal;
                     break;
@@ -1103,26 +1103,26 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * non-null.  If resulting value is null, delete.
      */
     final V replaceNode(Object key, V value, Object cv) {
-        int hash = spread(key.hashCode());
-        for (Node<K,V>[] tab = table;;) {
+        int hash = spread(key.hashCode()); /* key哈希值 */
+        for (Node<K,V>[] tab = table;;) { /* 遍历数组 */
             Node<K,V> f; int n, i, fh;
             if (tab == null || (n = tab.length) == 0 ||
-                (f = tabAt(tab, i = (n - 1) & hash)) == null)
+                (f = tabAt(tab, i = (n - 1) & hash)) == null) /* key哈希对应的数组节点为空，直接返回 */
                 break;
             else if ((fh = f.hash) == MOVED)
                 tab = helpTransfer(tab, f);
             else {
                 V oldVal = null;
                 boolean validated = false;
-                synchronized (f) {
+                synchronized (f) { /* key哈希对应的数组节点不空，加锁排队修改 */
                     if (tabAt(tab, i) == f) {
                         if (fh >= 0) {
                             validated = true;
-                            for (Node<K,V> e = f, pred = null;;) {
+                            for (Node<K,V> e = f, pred = null;;) { /* 遍历哈希链表 */
                                 K ek;
                                 if (e.hash == hash &&
                                     ((ek = e.key) == key ||
-                                     (ek != null && key.equals(ek)))) {
+                                     (ek != null && key.equals(ek)))) {/* 找到节点 */
                                     V ev = e.val;
                                     if (cv == null || cv == ev ||
                                         (ev != null && cv.equals(ev))) {
@@ -1130,9 +1130,9 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                                         if (value != null)
                                             e.val = value;
                                         else if (pred != null)
-                                            pred.next = e.next;
+                                            pred.next = e.next;      /* 删除节点 - 有前继节点 */
                                         else
-                                            setTabAt(tab, i, e.next);
+                                            setTabAt(tab, i, e.next);/* 删除节点 - 无前继节点 */
                                     }
                                     break;
                                 }
@@ -1531,7 +1531,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      *         or {@code null} if there was no mapping for the key
      * @throws NullPointerException if the specified key or value is null
      */
-    public V putIfAbsent(K key, V value) {
+    public V putIfAbsent(K key, V value) { /* key不存在才添加元素 */
         return putVal(key, value, true);
     }
 
@@ -1640,24 +1640,24 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * @throws RuntimeException or Error if the mappingFunction does so,
      *         in which case the mapping is left unestablished
      */
-    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) { /* 节点不存在，创建节点；节点存在，返回旧值 */
         if (key == null || mappingFunction == null)
             throw new NullPointerException();
-        int h = spread(key.hashCode());
+        int h = spread(key.hashCode()); /* key哈希值 */
         V val = null;
         int binCount = 0;
-        for (Node<K,V>[] tab = table;;) {
+        for (Node<K,V>[] tab = table;;) { /* 循环cas */
             Node<K,V> f; int n, i, fh;
             if (tab == null || (n = tab.length) == 0)
-                tab = initTable();
-            else if ((f = tabAt(tab, i = (n - 1) & h)) == null) {
+                tab = initTable(); /* 数组为空，初始化数组 */
+            else if ((f = tabAt(tab, i = (n - 1) & h)) == null) { /* 定位key对应数组节点 */
                 Node<K,V> r = new ReservationNode<K,V>();
                 synchronized (r) {
-                    if (casTabAt(tab, i, null, r)) {
+                    if (casTabAt(tab, i, null, r)) { /* 定位key对应数组节点为空 --> 只有一个线程cas成功 -->创建节点 */
                         binCount = 1;
                         Node<K,V> node = null;
                         try {
-                            if ((val = mappingFunction.apply(key)) != null)
+                            if ((val = mappingFunction.apply(key)) != null) /* 获取key对应的val */
                                 node = new Node<K,V>(h, key, val, null);
                         } finally {
                             setTabAt(tab, i, node);
@@ -1671,20 +1671,20 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 tab = helpTransfer(tab, f);
             else {
                 boolean added = false;
-                synchronized (f) {
+                synchronized (f) {  /* 定位key对应数组节点不空，synchronized加锁排队修改 */
                     if (tabAt(tab, i) == f) {
                         if (fh >= 0) {
                             binCount = 1;
-                            for (Node<K,V> e = f;; ++binCount) {
+                            for (Node<K,V> e = f;; ++binCount) {/* 遍历链表 */
                                 K ek; V ev;
                                 if (e.hash == h &&
                                     ((ek = e.key) == key ||
                                      (ek != null && key.equals(ek)))) {
-                                    val = e.val;
+                                    val = e.val; /* 节点已经存在，直接返回旧值 */
                                     break;
                                 }
                                 Node<K,V> pred = e;
-                                if ((e = e.next) == null) {
+                                if ((e = e.next) == null) { /* 链表中没找到节点，在链表尾部新建节点 */
                                     if ((val = mappingFunction.apply(key)) != null) {
                                         added = true;
                                         pred.next = new Node<K,V>(h, key, val, null);
@@ -1708,8 +1708,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                     }
                 }
                 if (binCount != 0) {
-                    if (binCount >= TREEIFY_THRESHOLD)
-                        treeifyBin(tab, i);
+                    if (binCount >= TREEIFY_THRESHOLD) /* 遍历链表节点次数 TREEIFY_THRESHOLD==8 */
+                        treeifyBin(tab, i);/* 转换红黑树，为什么哈希冲突链表节点数>=8才转换红黑树，因为转换成红黑树后添加删除操作效率下降，而基于统计概率哈希冲突链表节点数>=8概率已经很小，基本可以避免链表转换为红黑树*/
                     if (!added)
                         return val;
                     break;
@@ -1741,39 +1741,39 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * @throws RuntimeException or Error if the remappingFunction does so,
      *         in which case the mapping is unchanged
      */
-    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) { /* 节点存在，更新节点 */
         if (key == null || remappingFunction == null)
             throw new NullPointerException();
         int h = spread(key.hashCode());
         V val = null;
         int delta = 0;
         int binCount = 0;
-        for (Node<K,V>[] tab = table;;) {
+        for (Node<K,V>[] tab = table;;) { /* 遍历数组 */
             Node<K,V> f; int n, i, fh;
             if (tab == null || (n = tab.length) == 0)
                 tab = initTable();
-            else if ((f = tabAt(tab, i = (n - 1) & h)) == null)
+            else if ((f = tabAt(tab, i = (n - 1) & h)) == null) /* key哈希对应的数组节点不存在，直接返回 */
                 break;
             else if ((fh = f.hash) == MOVED)
                 tab = helpTransfer(tab, f);
             else {
-                synchronized (f) {
+                synchronized (f) {/* key哈希对应的数组节点存在，加锁排队修改 */
                     if (tabAt(tab, i) == f) {
                         if (fh >= 0) {
                             binCount = 1;
-                            for (Node<K,V> e = f, pred = null;; ++binCount) {
+                            for (Node<K,V> e = f, pred = null;; ++binCount) { /* 遍历哈希冲突链表 */
                                 K ek;
                                 if (e.hash == h &&
                                     ((ek = e.key) == key ||
-                                     (ek != null && key.equals(ek)))) {
-                                    val = remappingFunction.apply(key, e.val);
+                                     (ek != null && key.equals(ek)))) { /* 找到节点  */
+                                    val = remappingFunction.apply(key, e.val); /* 获取节点值 */
                                     if (val != null)
-                                        e.val = val;
+                                        e.val = val; /* 更新节点值 */
                                     else {
                                         delta = -1;
                                         Node<K,V> en = e.next;
                                         if (pred != null)
-                                            pred.next = en;
+                                            pred.next = en; /* 如果节点更新的值为空，则删除节点 */
                                         else
                                             setTabAt(tab, i, en);
                                     }
@@ -1832,7 +1832,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      *         in which case the mapping is unchanged
      */
     public V compute(K key,
-                     BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+                     BiFunction<? super K, ? super V, ? extends V> remappingFunction) { /* 节点不存在，新建节点；节点存在，更新节点值 */
         if (key == null || remappingFunction == null)
             throw new NullPointerException();
         int h = spread(key.hashCode());/* key哈希值*/
@@ -2230,7 +2230,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                     if ((tab = table) == null || tab.length == 0) {
                         int n = (sc > 0) ? sc : DEFAULT_CAPACITY; //DEFAULT_CAPACITY == 16
                         @SuppressWarnings("unchecked")
-                        Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n];/* 数组table默认大小16个 */
+                        Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n];/* 数组table大小默认16个 */
                         table = tab = nt;
                         sc = n - (n >>> 2);
                     }
@@ -2349,7 +2349,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                         transferIndex <= 0)
                         break;
                     if (U.compareAndSwapInt(this, SIZECTL, sc, sc + 1))
-                        transfer(tab, nt);
+                        transfer(tab, nt); /* cas成功，节点数组扩容 */
                 }
                 else if (U.compareAndSwapInt(this, SIZECTL, sc,
                                              (rs << RESIZE_STAMP_SHIFT) + 2))
@@ -2362,7 +2362,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * Moves and/or copies the nodes in each bin to new table. See
      * above for explanation.
      */
-    private final void transfer(Node<K,V>[] tab, Node<K,V>[] nextTab) {
+    private final void transfer(Node<K,V>[] tab, Node<K,V>[] nextTab) { /* 数组扩容迁移 */
         int n = tab.length, stride;
         if ((stride = (NCPU > 1) ? (n >>> 3) / NCPU : n) < MIN_TRANSFER_STRIDE)
             stride = MIN_TRANSFER_STRIDE; // subdivide range
@@ -2606,16 +2606,16 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * Replaces all linked nodes in bin at given index unless table is
      * too small, in which case resizes instead.
      */
-    private final void treeifyBin(Node<K,V>[] tab, int index) {
+    private final void treeifyBin(Node<K,V>[] tab, int index) { /* 链表转换红黑树需要两个条件 1、链表长度>=8。 2、Node数组长度>=64 */
         Node<K,V> b; int n, sc;
         if (tab != null) {
-            if ((n = tab.length) < MIN_TREEIFY_CAPACITY)
-                tryPresize(n << 1);
+            if ((n = tab.length) < MIN_TREEIFY_CAPACITY)/* MIN_TREEIFY_CAPACITY == 64 */
+                tryPresize(n << 1);/* 条件不满足转换红黑树 ，先数组2倍扩容 */
             else if ((b = tabAt(tab, index)) != null && b.hash >= 0) {
                 synchronized (b) {
-                    if (tabAt(tab, index) == b) {
+                    if (tabAt(tab, index) == b) {// b = tabAt(tab, index)) 双重判断
                         TreeNode<K,V> hd = null, tl = null;
-                        for (Node<K,V> e = b; e != null; e = e.next) {
+                        for (Node<K,V> e = b; e != null; e = e.next) {/* 遍历链表 --> 转换红黑树  */
                             TreeNode<K,V> p =
                                 new TreeNode<K,V>(e.hash, e.key, e.val,
                                                   null, null);

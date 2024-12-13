@@ -315,8 +315,8 @@ public class Exchanger<V> {
         int bound;              // Last recorded value of Exchanger.bound
         int collides;           // Number of CAS failures at current bound
         int hash;               // Pseudo-random for spins
-        Object item;            // This thread's current item
-        volatile Object match;  // Item provided by releasing thread
+        Object item;            // This thread's current item          自己数据
+        volatile Object match;  // Item provided by releasing thread   对方数据
         volatile Thread parked; // Set to this thread when parked, else null
     }
 

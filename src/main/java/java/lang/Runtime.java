@@ -605,7 +605,7 @@ public class Runtime {
      *          machine; never smaller than one
      * @since 1.4
      */
-    public native int availableProcessors();
+    public native int availableProcessors(); /* 操纵系统看到的处理器核数，也就是逻辑处理器数 */
 
     /**
      * Returns the amount of free memory in the Java Virtual Machine.
