@@ -111,7 +111,7 @@ import java.util.regex.PatternSyntaxException;
 public final class String
     implements java.io.Serializable, Comparable<String>, CharSequence {
     /** The value is used for character storage. */
-    private final char value[];
+    private final char value[]; /* 字符数组 */
 
     /** Cache the hash code for the string */
     private int hash; // Default to 0
@@ -984,7 +984,7 @@ public final class String
                 char v1[] = value;
                 char v2[] = anotherString.value;
                 int i = 0;
-                while (n-- != 0) {
+                while (n-- != 0) { /* 遍历字符数组比较 */
                     if (v1[i] != v2[i])
                         return false;
                     i++;
@@ -2496,10 +2496,10 @@ public final class String
      * @since 1.8
      */
     public static String join(CharSequence delimiter,
-            Iterable<? extends CharSequence> elements) {
+            Iterable<? extends CharSequence> elements) {/* 集合字符拼接 */
         Objects.requireNonNull(delimiter);
         Objects.requireNonNull(elements);
-        StringJoiner joiner = new StringJoiner(delimiter);
+        StringJoiner joiner = new StringJoiner(delimiter);/* delimiter=分隔符 */
         for (CharSequence cs: elements) {
             joiner.add(cs);
         }
@@ -2864,15 +2864,15 @@ public final class String
      *          space removed, or this string if it has no leading or
      *          trailing white space.
      */
-    public String trim() {
+    public String trim() { /* 删除字符前后空格 */
         int len = value.length;
         int st = 0;
-        char[] val = value;    /* avoid getfield opcode */
+        char[] val = value;    /** avoid getfield opcode */
 
-        while ((st < len) && (val[st] <= ' ')) {
+        while ((st < len) && (val[st] <= ' ')) { /* 删除前面空格 */
             st++;
         }
-        while ((st < len) && (val[len - 1] <= ' ')) {
+        while ((st < len) && (val[len - 1] <= ' ')) { /* 删除后面空格 */
             len--;
         }
         return ((st > 0) || (len < value.length)) ? substring(st, len) : this;
@@ -3164,5 +3164,5 @@ public final class String
      * @return  a string that has the same contents as this string, but is
      *          guaranteed to be from a pool of unique strings.
      */
-    public native String intern();
+    public native String intern(); /* 字符串池化。如果字符串常量池HashTable中存在，直接返回池中字符串对象的引用；否则池中加入缓存。字符串常量池在堆中，字符字面量缓存在池中 */
 }

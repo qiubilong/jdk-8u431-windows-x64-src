@@ -91,10 +91,10 @@ public abstract class AbstractQueue<E>
      * @throws IllegalArgumentException if some property of this element
      *         prevents it from being added to this queue
      */
-    public boolean add(E e) {
+    public boolean add(E e) { /* 队尾添加元素 */
         if (offer(e))
             return true;
-        else
+        else  /* 添加不成功，抛队列满异常 */
             throw new IllegalStateException("Queue full");
     }
 
@@ -109,11 +109,11 @@ public abstract class AbstractQueue<E>
      * @return the head of this queue
      * @throws NoSuchElementException if this queue is empty
      */
-    public E remove() {
-        E x = poll();
+    public E remove() { /* 消费队首元素，队首null抛异常 */
+        E x = poll(); //消费队首元素
         if (x != null)
             return x;
-        else
+        else /* 队首元素为空，抛出异常 */
             throw new NoSuchElementException();
     }
 
@@ -128,11 +128,11 @@ public abstract class AbstractQueue<E>
      * @return the head of this queue
      * @throws NoSuchElementException if this queue is empty
      */
-    public E element() {
+    public E element() { /* 查看队首 */
         E x = peek();
         if (x != null)
             return x;
-        else
+        else   /* 队首为null，抛出异常 */
             throw new NoSuchElementException();
     }
 

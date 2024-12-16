@@ -141,7 +141,7 @@ package java.util;
  * @author Doug Lea
  * @param <E> the type of elements held in this collection
  */
-public interface Queue<E> extends Collection<E> {
+public interface Queue<E> extends Collection<E> {  /* FIFO队列 */
     /**
      * Inserts the specified element into this queue if it is possible to do so
      * immediately without violating capacity restrictions, returning
@@ -159,7 +159,7 @@ public interface Queue<E> extends Collection<E> {
      * @throws IllegalArgumentException if some property of this element
      *         prevents it from being added to this queue
      */
-    boolean add(E e);
+    boolean add(E e); /* 添加元素，队列满抛异常。包装 offer(E e)  */
 
     /**
      * Inserts the specified element into this queue if it is possible to do
@@ -178,7 +178,7 @@ public interface Queue<E> extends Collection<E> {
      * @throws IllegalArgumentException if some property of this element
      *         prevents it from being added to this queue
      */
-    boolean offer(E e);
+    boolean offer(E e); /* 添加元素，队列满返回false */
 
     /**
      * Retrieves and removes the head of this queue.  This method differs
@@ -188,7 +188,7 @@ public interface Queue<E> extends Collection<E> {
      * @return the head of this queue
      * @throws NoSuchElementException if this queue is empty
      */
-    E remove();
+    E remove(); /* 删除队首元素，队列为空抛异常。包装 poll() */
 
     /**
      * Retrieves and removes the head of this queue,
@@ -196,7 +196,7 @@ public interface Queue<E> extends Collection<E> {
      *
      * @return the head of this queue, or {@code null} if this queue is empty
      */
-    E poll();
+    E poll(); /* 删除队首元素，队列空，返回null */
 
     /**
      * Retrieves, but does not remove, the head of this queue.  This method
@@ -206,7 +206,7 @@ public interface Queue<E> extends Collection<E> {
      * @return the head of this queue
      * @throws NoSuchElementException if this queue is empty
      */
-    E element();
+    E element(); /* 查看队首元素，队列空抛出异常。包装 peek() */
 
     /**
      * Retrieves, but does not remove, the head of this queue,
@@ -214,5 +214,5 @@ public interface Queue<E> extends Collection<E> {
      *
      * @return the head of this queue, or {@code null} if this queue is empty
      */
-    E peek();
+    E peek();  /* 查看队首元素，队列空返回null */   //peek为偷看的意思
 }

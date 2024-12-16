@@ -98,7 +98,7 @@ public class CopyOnWriteArrayList<E>
     final transient ReentrantLock lock = new ReentrantLock(); /* 可重入独占显示锁 */
 
     /** The array, accessed only via getArray/setArray. */
-    private transient volatile Object[] array;
+    private transient volatile Object[] array; /* volatile 保证读线程不加锁也可以 实时可见 */
 
     /**
      * Gets the array.  Non-private so as to also be accessible
@@ -188,7 +188,7 @@ public class CopyOnWriteArrayList<E>
      * @return index of element, or -1 if absent
      */
     private static int indexOf(Object o, Object[] elements,
-                               int index, int fence) {
+                               int index, int fence) { //fence == 数组长度
         if (o == null) {
             for (int i = index; i < fence; i++)
                 if (elements[i] == null)
@@ -431,7 +431,7 @@ public class CopyOnWriteArrayList<E>
      * @param e element to be appended to this list
      * @return {@code true} (as specified by {@link Collection#add})
      */
-    public boolean add(E e) {
+    public boolean add(E e) { /* 尾部添加数据 */
         final ReentrantLock lock = this.lock;
         lock.lock(); /* 独占锁 */
         try {
@@ -439,7 +439,7 @@ public class CopyOnWriteArrayList<E>
             int len = elements.length;
             Object[] newElements = Arrays.copyOf(elements, len + 1);/* 复制数组 */
             newElements[len] = e;
-            setArray(newElements); /* 替换数组 */
+            setArray(newElements); /* 替换数组指针 */
             return true;
         } finally {
             lock.unlock();
@@ -522,10 +522,10 @@ public class CopyOnWriteArrayList<E>
      * @param o element to be removed from this list, if present
      * @return {@code true} if this list contained the specified element
      */
-    public boolean remove(Object o) {
-        Object[] snapshot = getArray();
+    public boolean remove(Object o) { /* 删除元素 */
+        Object[] snapshot = getArray();//数组快照
         int index = indexOf(o, snapshot, 0, snapshot.length);
-        return (index < 0) ? false : remove(o, snapshot, index);
+        return (index < 0) ? false : remove(o, snapshot, index);//元素存在执行删除
     }
 
     /**
@@ -534,23 +534,23 @@ public class CopyOnWriteArrayList<E>
      */
     private boolean remove(Object o, Object[] snapshot, int index) {
         final ReentrantLock lock = this.lock;
-        lock.lock();
+        lock.lock();/* 加锁排队 */
         try {
             Object[] current = getArray();
             int len = current.length;
-            if (snapshot != current) findIndex: {
-                int prefix = Math.min(index, len);
+            if (snapshot != current) findIndex: { /* 快照数组发生变化，重新定位删除元素 */
+                int prefix = Math.min(index, len);//Math.min(index, current.length)
                 for (int i = 0; i < prefix; i++) {
-                    if (current[i] != snapshot[i] && eq(o, current[i])) {
-                        index = i;
+                    if (current[i] != snapshot[i] && eq(o, current[i])) {//current[i] != snapshot[i]索引位置内容发生变化
+                        index = i;/* 最小公共长度中，重新定位到删除元素 */
                         break findIndex;
                     }
                 }
-                if (index >= len)
+                if (index >= len) // index >= current.length，数组长度溢出检查
                     return false;
-                if (current[index] == o)
+                if (current[index] == o)/* 快速定位判断元素 */
                     break findIndex;
-                index = indexOf(o, current, index, len);
+                index = indexOf(o, current, index, len); /* 新数组中遍历查找元素 */
                 if (index < 0)
                     return false;
             }
@@ -609,10 +609,10 @@ public class CopyOnWriteArrayList<E>
      * @param e element to be added to this list, if absent
      * @return {@code true} if the element was added
      */
-    public boolean addIfAbsent(E e) {
+    public boolean addIfAbsent(E e) { /* 元素不存在时添加，Absent==不存在 */
         Object[] snapshot = getArray();
-        return indexOf(e, snapshot, 0, snapshot.length) >= 0 ? false :
-            addIfAbsent(e, snapshot);
+        return indexOf(e, snapshot, 0, snapshot.length) >= 0 ? false : //元素存在，不添加
+            addIfAbsent(e, snapshot);//元素不在，添加
     }
 
     /**

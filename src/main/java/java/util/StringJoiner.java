@@ -220,7 +220,7 @@ public final class StringJoiner {
 
     private StringBuilder prepareBuilder() {
         if (value != null) {
-            value.append(delimiter);
+            value.append(delimiter); /* 非首元素，加上拼接符，保证没有多余拼接符的关键 */
         } else {
             value = new StringBuilder().append(prefix);
         }

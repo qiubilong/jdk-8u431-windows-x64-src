@@ -80,25 +80,25 @@ import java.util.function.Consumer;
  * @param <E> the type of elements held in this collection
  */
 
-public class LinkedList<E>
+public class LinkedList<E>  /* 双向链表 */
     extends AbstractSequentialList<E>
     implements List<E>, Deque<E>, Cloneable, java.io.Serializable
 {
-    transient int size = 0;
+    transient int size = 0;   /* 节点数量 */
 
     /**
      * Pointer to first node.
      * Invariant: (first == null && last == null) ||
      *            (first.prev == null && first.item != null)
      */
-    transient Node<E> first;
+    transient Node<E> first; /* 首节点 */
 
     /**
      * Pointer to last node.
      * Invariant: (first == null && last == null) ||
      *            (last.next == null && last.item != null)
      */
-    transient Node<E> last;
+    transient Node<E> last; /* 尾结点 */
 
     /**
      * Constructs an empty list.
@@ -140,11 +140,11 @@ public class LinkedList<E>
     void linkLast(E e) {
         final Node<E> l = last;
         final Node<E> newNode = new Node<>(l, e, null);
-        last = newNode;
+        last = newNode; /* 新尾结点 */
         if (l == null)
             first = newNode;
         else
-            l.next = newNode;
+            l.next = newNode; /* 旧 last.next = newNode */
         size++;
         modCount++;
     }
@@ -334,7 +334,7 @@ public class LinkedList<E>
      * @param e element to be appended to this list
      * @return {@code true} (as specified by {@link Collection#add})
      */
-    public boolean add(E e) {
+    public boolean add(E e) { /* 添加元素到尾部 */
         linkLast(e);
         return true;
     }
@@ -968,9 +968,9 @@ public class LinkedList<E>
     }
 
     private static class Node<E> {
-        E item;
-        Node<E> next;
-        Node<E> prev;
+        E item;          /* 元素数据 */
+        Node<E> next;    /* 后继节点 */
+        Node<E> prev;    /* 前驱节点 */
 
         Node(Node<E> prev, E element, Node<E> next) {
             this.item = element;

@@ -80,7 +80,7 @@ import sun.misc.SharedSecrets;
  * @author Josh Bloch, Doug Lea
  * @param <E> the type of elements held in this collection
  */
-public class PriorityQueue<E> extends AbstractQueue<E>
+public class PriorityQueue<E> extends AbstractQueue<E>   /* 优先级队列 */
     implements java.io.Serializable {
 
     private static final long serialVersionUID = -7720805057305804111L;
@@ -95,12 +95,12 @@ public class PriorityQueue<E> extends AbstractQueue<E>
      * heap and each descendant d of n, n <= d.  The element with the
      * lowest value is in queue[0], assuming the queue is nonempty.
      */
-    transient Object[] queue; // non-private to simplify nested class access
+    transient Object[] queue; // non-private to simplify nested class access 数组实现队列
 
     /**
      * The number of elements in the priority queue.
      */
-    private int size = 0;
+    private int size = 0;   /* 元素数量 */
 
     /**
      * The comparator, or null if priority queue uses elements'
@@ -346,7 +346,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>
     }
 
     @SuppressWarnings("unchecked")
-    public E peek() {
+    public E peek() { /* 查看队首 */
         return (size == 0) ? null : (E) queue[0];
     }
 
