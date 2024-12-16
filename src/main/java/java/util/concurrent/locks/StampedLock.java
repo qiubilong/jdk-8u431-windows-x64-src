@@ -189,7 +189,7 @@ import java.util.concurrent.locks.LockSupport;
  * @author Doug Lea
  */
 public class StampedLock implements java.io.Serializable {
-    /*
+    /**
      * Algorithmic notes:
      *
      * The design employs elements of Sequence locks
@@ -337,7 +337,7 @@ public class StampedLock implements java.io.Serializable {
     /**
      * Creates a new lock, initially in unlocked state.
      */
-    public StampedLock() {
+    public StampedLock() {  /* 乐观锁 - 读数据不加锁，数据发生变化再加锁，  解决ReentrantReadWriteLock读写锁，读锁阻塞数据写入问题 */
         state = ORIGIN;
     }
 

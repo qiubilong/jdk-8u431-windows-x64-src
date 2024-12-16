@@ -212,13 +212,13 @@ import java.util.Collection;
  * @since 1.5
  * @author Doug Lea
  */
-public class ReentrantReadWriteLock
+public class ReentrantReadWriteLock  /* 读写锁 - 悲观锁， 解决ReentrantLock读读互斥问题 */
         implements ReadWriteLock, java.io.Serializable {
     private static final long serialVersionUID = -6992448646407690164L;
     /** Inner class providing readlock */
-    private final ReentrantReadWriteLock.ReadLock readerLock;
+    private final ReentrantReadWriteLock.ReadLock readerLock; /* 读锁，读锁不互斥 */
     /** Inner class providing writelock */
-    private final ReentrantReadWriteLock.WriteLock writerLock;
+    private final ReentrantReadWriteLock.WriteLock writerLock; /* 写锁 */
     /** Performs all synchronization mechanics */
     final Sync sync;
 
@@ -226,7 +226,7 @@ public class ReentrantReadWriteLock
      * Creates a new {@code ReentrantReadWriteLock} with
      * default (nonfair) ordering properties.
      */
-    public ReentrantReadWriteLock() {
+    public ReentrantReadWriteLock() { /* 读写锁 - 写锁是独占的，写锁是共享的 - 适合读多写少 */
         this(false);
     }
 
@@ -391,7 +391,7 @@ public class ReentrantReadWriteLock
              */
             Thread current = Thread.currentThread();
             int c = getState();
-            int w = exclusiveCount(c);
+            int w = exclusiveCount(c);//写锁数量
             if (c != 0) {/* 存在读锁或者写锁 */
                 // (Note: if c != 0 and w == 0 then shared count != 0)
                 if (w == 0 || current != getExclusiveOwnerThread()) /* w == 0说明存在读锁 ， current != getExclusiveOwnerThread() 说明写锁不是自己持有 */
@@ -445,7 +445,7 @@ public class ReentrantReadWriteLock
                 "attempt to unlock read lock, not locked by current thread");
         }
 
-        protected final int tryAcquireShared(int unused) { /* 加读锁 */
+        protected final int tryAcquireShared(int unused) {  /* ReadLock加锁 */
             /**
              * Walkthrough:
              * 1. If write lock held by another thread, fail.
@@ -467,7 +467,7 @@ public class ReentrantReadWriteLock
                 getExclusiveOwnerThread() != current) /* 存在写锁，且非自己，失败 */
                 return -1;
             int r = sharedCount(c);
-            if (!readerShouldBlock() && //防止竞争写锁线程饥饿
+            if (!readerShouldBlock() && //防止写锁线程饥饿
                 r < MAX_COUNT &&
                 compareAndSetState(c, c + SHARED_UNIT)) {//加读锁，高16位加1
                 if (r == 0) {
@@ -507,7 +507,7 @@ public class ReentrantReadWriteLock
                         return -1;
                     // else we hold the exclusive lock; blocking here
                     // would cause deadlock.
-                } else if (readerShouldBlock()) {/* 获锁同步队列头结点是写锁时，放弃加读锁，以免竞争写锁线程出现饥饿 */
+                } else if (readerShouldBlock()) {/* 获锁同步队列头结点是写锁时，放弃加读锁，以免写锁线程出现饥饿 */
                     // Make sure we're not acquiring read lock reentrantly
                     if (firstReader == current) {
                         // assert firstReaderHoldCount > 0;
@@ -668,8 +668,8 @@ public class ReentrantReadWriteLock
      */
     static final class NonfairSync extends Sync {
         private static final long serialVersionUID = -8159625535654395037L;
-        final boolean writerShouldBlock() {
-            return false; // writers can always barge 写锁优先
+        final boolean writerShouldBlock() { /* 写锁优先 */
+            return false; // writers can always barge
         }
         final boolean readerShouldBlock() {
             /** As a heuristic to avoid indefinite writer starvation,
@@ -725,7 +725,7 @@ public class ReentrantReadWriteLock
          */
         public void lock() {
             sync.acquireShared(1);
-        }
+        } /* 读锁，共享锁 */
 
         /**
          * Acquires the read lock unless the current thread is
