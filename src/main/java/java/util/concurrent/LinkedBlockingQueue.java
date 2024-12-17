@@ -206,7 +206,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E> /* 无界 - 阻塞 
      *
      * @return the node
      */
-    private E dequeue() {
+    private E dequeue() { /* 移除队首 */
         // assert takeLock.isHeldByCurrentThread();
         // assert head.item == null;
         Node<E> h = head;
