@@ -188,7 +188,7 @@ public interface Queue<E> extends Collection<E> {  /* FIFO队列 */
      * @return the head of this queue
      * @throws NoSuchElementException if this queue is empty
      */
-    E remove(); /* 删除队首元素，队列为空抛异常。包装 poll() */
+    E remove(); /*  移除队首元素，队列为空抛异常。包装 poll() */
 
     /**
      * Retrieves and removes the head of this queue,
@@ -196,7 +196,7 @@ public interface Queue<E> extends Collection<E> {  /* FIFO队列 */
      *
      * @return the head of this queue, or {@code null} if this queue is empty
      */
-    E poll(); /* 删除队首元素，队列空，返回null */
+    E poll(); /* 移除队首元素，队列空，返回null */
 
     /**
      * Retrieves, but does not remove, the head of this queue.  This method

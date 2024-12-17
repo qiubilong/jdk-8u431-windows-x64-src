@@ -74,11 +74,11 @@ import java.util.function.Consumer;
  * @author  Doug Lea
  * @param <E> the type of elements held in this collection
  */
-public class LinkedBlockingDeque<E>
+public class LinkedBlockingDeque<E>  /*阻塞 - 无界 - 双端 - 链表 - 队列 */
     extends AbstractQueue<E>
     implements BlockingDeque<E>, java.io.Serializable {
 
-    /*
+    /**
      * Implemented as a simple doubly-linked list protected by a
      * single lock and using conditions to manage blocking.
      *
@@ -97,7 +97,7 @@ public class LinkedBlockingDeque<E>
      * or "last" (for prev links).
      */
 
-    /*
+    /**
      * We have "diamond" multiple interface/abstract class inheritance
      * here, and that introduces ambiguities. Often we want the
      * BlockingDeque javadoc combined with the AbstractQueue
@@ -107,11 +107,11 @@ public class LinkedBlockingDeque<E>
     private static final long serialVersionUID = -387911632671998426L;
 
     /** Doubly-linked list node class */
-    static final class Node<E> {
+    static final class Node<E> { /* 链表节点 */
         /**
          * The item, or null if this node has been removed.
          */
-        E item;
+        E item;         /* 数据元素 */
 
         /**
          * One of:
@@ -119,7 +119,7 @@ public class LinkedBlockingDeque<E>
          * - this Node, meaning the predecessor is tail
          * - null, meaning there is no predecessor
          */
-        Node<E> prev;
+        Node<E> prev;  /* 前节点 */
 
         /**
          * One of:
@@ -127,7 +127,7 @@ public class LinkedBlockingDeque<E>
          * - this Node, meaning the successor is head
          * - null, meaning there is no successor
          */
-        Node<E> next;
+        Node<E> next; /* 后节点 */
 
         Node(E x) {
             item = x;
@@ -139,35 +139,35 @@ public class LinkedBlockingDeque<E>
      * Invariant: (first == null && last == null) ||
      *            (first.prev == null && first.item != null)
      */
-    transient Node<E> first;
+    transient Node<E> first;      /* 队首 */
 
     /**
      * Pointer to last node.
      * Invariant: (first == null && last == null) ||
      *            (last.next == null && last.item != null)
      */
-    transient Node<E> last;
+    transient Node<E> last;       /* 队尾 */
 
     /** Number of items in the deque */
-    private transient int count;
+    private transient int count; /* 队列元素数量 */
 
     /** Maximum number of items in the deque */
-    private final int capacity;
+    private final int capacity; /* 队列容量 */
 
     /** Main lock guarding all access */
     final ReentrantLock lock = new ReentrantLock();
 
     /** Condition for waiting takes */
-    private final Condition notEmpty = lock.newCondition();
+    private final Condition notEmpty = lock.newCondition(); /* 等待队列不空事件 */
 
     /** Condition for waiting puts */
-    private final Condition notFull = lock.newCondition();
+    private final Condition notFull = lock.newCondition(); /* 等待队列不满事件 */
 
     /**
      * Creates a {@code LinkedBlockingDeque} with a capacity of
      * {@link Integer#MAX_VALUE}.
      */
-    public LinkedBlockingDeque() {
+    public LinkedBlockingDeque() { /* 默认无界队列 */
         this(Integer.MAX_VALUE);
     }
 
@@ -233,19 +233,19 @@ public class LinkedBlockingDeque<E>
     /**
      * Links node as last element, or returns false if full.
      */
-    private boolean linkLast(Node<E> node) {
+    private boolean linkLast(Node<E> node) { /* 插入队尾 */
         // assert lock.isHeldByCurrentThread();
-        if (count >= capacity)
+        if (count >= capacity) /* 队列已满 */
             return false;
         Node<E> l = last;
         node.prev = l;
-        last = node;
-        if (first == null)
+        last = node; /* 新队尾 */
+        if (first == null)//第一个元素
             first = node;
         else
-            l.next = node;
+            l.next = node; //非第一个元素
         ++count;
-        notEmpty.signal();
+        notEmpty.signal(); /* 队列不空事件 --> 唤醒消费者  */
         return true;
     }
 
@@ -386,14 +386,14 @@ public class LinkedBlockingDeque<E>
      * @throws NullPointerException {@inheritDoc}
      * @throws InterruptedException {@inheritDoc}
      */
-    public void putLast(E e) throws InterruptedException {
+    public void putLast(E e) throws InterruptedException { /* 元素插入队尾 --> 队列满 --> 挂起线程等待   */
         if (e == null) throw new NullPointerException();
         Node<E> node = new Node<E>(e);
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             while (!linkLast(node))
-                notFull.await();
+                notFull.await();/* 未添加成功 --> 挂起等待  */
         } finally {
             lock.unlock();
         }
@@ -645,7 +645,7 @@ public class LinkedBlockingDeque<E>
      * @throws NullPointerException {@inheritDoc}
      * @throws InterruptedException {@inheritDoc}
      */
-    public void put(E e) throws InterruptedException {
+    public void put(E e) throws InterruptedException { /* 元素插入队尾 -->  队列满 --> 挂起线程等待 */
         putLast(e);
     }
 

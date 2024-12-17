@@ -895,7 +895,7 @@ public abstract class AbstractQueuedSynchronizer
                 }
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     parkAndCheckInterrupt()) /* 挂起当前线程 */
-                    throw new InterruptedException(); /* 被唤醒且被中断时抛出中断异常 */
+                    throw new InterruptedException(); /* 被唤醒后有中断标志位时，抛出中断异常 */
             }
         } finally {
             if (failed)
@@ -2071,7 +2071,7 @@ public abstract class AbstractQueuedSynchronizer
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {
                 if (nanosTimeout <= 0L) {
-                    transferAfterCancelledWait(node);
+                    transferAfterCancelledWait(node);//等待超时 --> 迁移到同步获锁队列
                     break;
                 }
                 if (nanosTimeout >= spinForTimeoutThreshold)

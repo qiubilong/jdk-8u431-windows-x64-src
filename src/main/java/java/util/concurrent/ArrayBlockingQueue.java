@@ -79,7 +79,7 @@ import java.util.Spliterator;
  * @author Doug Lea
  * @param <E> the type of elements held in this collection
  */
-public class ArrayBlockingQueue<E> extends AbstractQueue<E>
+public class ArrayBlockingQueue<E> extends AbstractQueue<E>   /* 数组阻塞队列 - FIFO先进先出 - 有界，初始化时必须指定容量 - 不能扩容 */
         implements BlockingQueue<E>, java.io.Serializable {
 
     /**
@@ -91,7 +91,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     private static final long serialVersionUID = -817911632652898426L;
 
     /** The queued items */
-    final Object[] items;
+    final Object[] items;  /* 队列数组 */
 
     /** items index for next take, poll, peek or remove */
     int takeIndex;
@@ -100,9 +100,9 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     int putIndex;
 
     /** Number of elements in the queue */
-    int count;
+    int count;  /* 元素数量 */
 
-    /*
+    /**
      * Concurrency control uses the classic two-condition algorithm
      * found in any textbook.
      */
@@ -111,10 +111,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     final ReentrantLock lock;
 
     /** Condition for waiting takes */
-    private final Condition notEmpty;
+    private final Condition notEmpty; /* 等待队列 - 不空条件 */
 
     /** Condition for waiting puts */
-    private final Condition notFull;
+    private final Condition notFull; /* 等待队列 - 未满条件 */
 
     /**
      * Shared state for currently active iterators, or null if there
@@ -154,15 +154,15 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Inserts element at current put position, advances, and signals.
      * Call only when holding lock.
      */
-    private void enqueue(E x) {
+    private void enqueue(E x) { /* 数据入队 */
         // assert lock.getHoldCount() == 1;
         // assert items[putIndex] == null;
         final Object[] items = this.items;
         items[putIndex] = x;
-        if (++putIndex == items.length)
+        if (++putIndex == items.length) /* 数组循环使用 */
             putIndex = 0;
         count++;
-        notEmpty.signal();
+        notEmpty.signal(); /* 发布队列不空事件 --> 唤醒消费者 */
     }
 
     /**
@@ -176,12 +176,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         @SuppressWarnings("unchecked")
         E x = (E) items[takeIndex];
         items[takeIndex] = null;
-        if (++takeIndex == items.length)
+        if (++takeIndex == items.length) /* 循环数组 */
             takeIndex = 0;
         count--;
         if (itrs != null)
             itrs.elementDequeued();
-        notFull.signal();
+        notFull.signal(); /* 队列不空事件 */
         return x;
     }
 
@@ -309,7 +309,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException if the specified element is null
      */
     public boolean add(E e) {
-        return super.add(e);
+        return super.add(e); /* offer(e)失败 --> 抛异常 */
     }
 
     /**
@@ -321,12 +321,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      *
      * @throws NullPointerException if the specified element is null
      */
-    public boolean offer(E e) {
+    public boolean offer(E e) { /* 尝试添加元素 --> 队列满 --> 返回false */
         checkNotNull(e);
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            if (count == items.length)
+            if (count == items.length) /* 队列满，返回false */
                 return false;
             else {
                 enqueue(e);
@@ -344,14 +344,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws InterruptedException {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
      */
-    public void put(E e) throws InterruptedException {
+    public void put(E e) throws InterruptedException { /* 添加元素 --> 队列满时 --> 挂起等待  */
         checkNotNull(e);
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
-            while (count == items.length)
-                notFull.await();
-            enqueue(e);
+            while (count == items.length)//队列满
+                notFull.await();/* 等待队列未满事件，挂起时释放锁，唤醒时获得锁后返回  */
+            enqueue(e);//数据入队
         } finally {
             lock.unlock();
         }
@@ -365,7 +365,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @throws InterruptedException {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
      */
-    public boolean offer(E e, long timeout, TimeUnit unit)
+    public boolean offer(E e, long timeout, TimeUnit unit) /* 限时添加元素 -->  队列满 -->超时等待  */
         throws InterruptedException {
 
         checkNotNull(e);
@@ -375,8 +375,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         try {
             while (count == items.length) {
                 if (nanos <= 0)
-                    return false;
-                nanos = notFull.awaitNanos(nanos);
+                    return false;//超时返回false
+                nanos = notFull.awaitNanos(nanos); /* 队列满 --> 超时等待 */
             }
             enqueue(e);
             return true;
@@ -385,7 +385,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
-    public E poll() {
+    public E poll() { /* 移除队首元素，队列空返回null */
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
@@ -395,19 +395,19 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
-    public E take() throws InterruptedException {
+    public E take() throws InterruptedException { /* 移除队首元素 --> 队列为空 --> 挂起等待  */
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
             while (count == 0)
                 notEmpty.await();
-            return dequeue();
+            return dequeue(); /* 移除队首元素 */
         } finally {
             lock.unlock();
         }
     }
 
-    public E poll(long timeout, TimeUnit unit) throws InterruptedException {
+    public E poll(long timeout, TimeUnit unit) throws InterruptedException { /* 限时移除队首元素 --> 队列为空 --> 超时等待 */
         long nanos = unit.toNanos(timeout);
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
@@ -415,15 +415,15 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             while (count == 0) {
                 if (nanos <= 0)
                     return null;
-                nanos = notEmpty.awaitNanos(nanos);
+                nanos = notEmpty.awaitNanos(nanos); /* 超时等待 */
             }
-            return dequeue();
+            return dequeue();/* 移除队首元素 */
         } finally {
             lock.unlock();
         }
     }
 
-    public E peek() {
+    public E peek() { /* 查看队首元素 -->队列为空 -->返回null */
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
@@ -506,7 +506,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                     }
                     if (++i == items.length)
                         i = 0;
-                } while (i != putIndex);
+                } while (i != putIndex);//保证takeIndex < putIndex
             }
             return false;
         } finally {
@@ -536,7 +536,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                         return true;
                     if (++i == items.length)
                         i = 0;
-                } while (i != putIndex);
+                } while (i != putIndex); //保证takeIndex < putIndex
             }
             return false;
         } finally {
