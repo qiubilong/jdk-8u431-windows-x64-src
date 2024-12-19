@@ -196,7 +196,7 @@ public interface BlockingQueue<E> extends Queue<E> {
      * @throws IllegalArgumentException if some property of the specified
      *         element prevents it from being added to this queue
      */
-    boolean add(E e);
+    boolean add(E e);/* 添加元素 --> 队列满 -->  抛出异常。包装offer(e) */
 
     /**
      * Inserts the specified element into this queue if it is possible to do

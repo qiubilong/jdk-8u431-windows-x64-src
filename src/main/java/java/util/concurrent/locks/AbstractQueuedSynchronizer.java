@@ -2065,13 +2065,13 @@ public abstract class AbstractQueuedSynchronizer
                 throws InterruptedException {
             if (Thread.interrupted())
                 throw new InterruptedException();
-            Node node = addConditionWaiter(); /* 加入条件等待队列队尾 */
+            Node node = addConditionWaiter(); /* 加入-条件等待队列-队尾 */
             int savedState = fullyRelease(node); /* 释放锁 */
             final long deadline = System.nanoTime() + nanosTimeout;
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {
                 if (nanosTimeout <= 0L) {
-                    transferAfterCancelledWait(node);//等待超时 --> 迁移到同步获锁队列
+                    transferAfterCancelledWait(node);//等待超时 --> 迁移到-同步获锁队列
                     break;
                 }
                 if (nanosTimeout >= spinForTimeoutThreshold)

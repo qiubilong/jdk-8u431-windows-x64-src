@@ -500,8 +500,8 @@ public class Executors {
     /**
      * A callable that runs given task and returns given result
      */
-    static final class RunnableAdapter<T> implements Callable<T> {
-        final Runnable task;
+    static final class RunnableAdapter<T> implements Callable<T> { /* Runnable 适配 Callable */
+        final Runnable task; /* 任务 */
         final T result;
         RunnableAdapter(Runnable task, T result) {
             this.task = task;

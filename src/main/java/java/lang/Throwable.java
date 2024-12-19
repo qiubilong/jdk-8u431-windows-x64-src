@@ -111,11 +111,11 @@ import java.util.*;
  *          stack trace in 1.4.)
  * @jls 11.2 Compile-Time Checking of Exceptions
  * @since JDK1.0
- */
-public class Throwable implements Serializable {
-    /** use serialVersionUID from JDK 1.0.2 for interoperability */
-    private static final long serialVersionUID = -3042686055658047285L;
-
+ */                                                                              /*                              |-- RuntimeException              */
+public class Throwable implements Serializable {                                 /*             -- Exception 异常                                  */
+    /** use serialVersionUID from JDK 1.0.2 for interoperability */              /*             |                |-- 非运行时异常（必须try-catch）    */
+    private static final long serialVersionUID = -3042686055658047285L;           /*    Throwable                                                 */
+                                                                                  /*            | -- Error 错误                                    */
     /**
      * Native code saves some indication of the stack backtrace in this slot.
      */
@@ -159,7 +159,7 @@ public class Throwable implements Serializable {
      */
     private static final StackTraceElement[] UNASSIGNED_STACK = new StackTraceElement[0];
 
-    /*
+    /**
      * To allow Throwable objects to be made immutable and safely
      * reused by the JVM, such as OutOfMemoryErrors, fields of
      * Throwable that are writable in response to user actions, cause,

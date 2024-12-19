@@ -107,11 +107,11 @@ import sun.misc.SharedSecrets;
  * @param <E> the type of elements held in this collection
  */
 @SuppressWarnings("unchecked")
-public class PriorityBlockingQueue<E> extends AbstractQueue<E>
+public class PriorityBlockingQueue<E> extends AbstractQueue<E> /* 优先级 - 自动扩容 - 线程安全队列。    默认最小堆，最小元素在队首 */
     implements BlockingQueue<E>, java.io.Serializable {
     private static final long serialVersionUID = 5595510919245408276L;
 
-    /*
+    /**
      * The implementation uses an array-based binary heap, with public
      * operations protected with a single lock. However, allocation
      * during resizing uses a simple spinlock (used only while not
@@ -148,7 +148,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * heap and each descendant d of n, n <= d.  The element with the
      * lowest value is in queue[0], assuming the queue is nonempty.
      */
-    private transient Object[] queue;
+    private transient Object[] queue; /* 元素数组 - 满足平衡二叉堆 */
 
     /**
      * The number of elements in the priority queue.
@@ -159,17 +159,17 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * The comparator, or null if priority queue uses elements'
      * natural ordering.
      */
-    private transient Comparator<? super E> comparator;
+    private transient Comparator<? super E> comparator; /* 元素比较器 */
 
     /**
      * Lock used for all public operations
      */
-    private final ReentrantLock lock;
+    private final ReentrantLock lock; /* 锁 */
 
     /**
      * Condition for blocking when empty
      */
-    private final Condition notEmpty;
+    private final Condition notEmpty; /* 队列非空事件 */
 
     /**
      * Spinlock for allocation, acquired via CAS.
@@ -294,7 +294,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             try {
                 int newCap = oldCap + ((oldCap < 64) ?
                                        (oldCap + 2) : // grow faster if small
-                                       (oldCap >> 1));
+                                       (oldCap >> 1));/* oldCap/2   */
                 if (newCap - MAX_ARRAY_SIZE > 0) {    // possible overflow
                     int minCap = oldCap + 1;
                     if (minCap < 0 || minCap > MAX_ARRAY_SIZE)
@@ -474,14 +474,14 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      *         priority queue's ordering
      * @throws NullPointerException if the specified element is null
      */
-    public boolean offer(E e) {
+    public boolean offer(E e) { /* 插入数据 -->队列满 -->自动扩容 */
         if (e == null)
             throw new NullPointerException();
         final ReentrantLock lock = this.lock;
         lock.lock();
         int n, cap;
         Object[] array;
-        while ((n = size) >= (cap = (array = queue).length))
+        while ((n = size) >= (cap = (array = queue).length)) /* 队列满 --> 扩容  */
             tryGrow(array, cap);
         try {
             Comparator<? super E> cmp = comparator;
@@ -490,7 +490,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             else
                 siftUpUsingComparator(n, e, array, cmp);
             size = n + 1;
-            notEmpty.signal();
+            notEmpty.signal(); /* 发布队列不空事件 -->  唤醒消费者 */
         } finally {
             lock.unlock();
         }
@@ -507,7 +507,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      *         priority queue's ordering
      * @throws NullPointerException if the specified element is null
      */
-    public void put(E e) {
+    public void put(E e) { /* 插入数据，因为队列可以自动扩容，所以不会阻塞 */
         offer(e); // never need to block
     }
 
@@ -530,7 +530,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         return offer(e); // never need to block
     }
 
-    public E poll() {
+    public E poll() {  /* 移除队首元素 --> 队列为空 --> 返回null  */
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
@@ -540,12 +540,12 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
-    public E take() throws InterruptedException {
+    public E take() throws InterruptedException { /* 移除队首元素 --> 队列为空 --> 挂起等待  */
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         E result;
         try {
-            while ( (result = dequeue()) == null)
+            while ( (result = dequeue()) == null)/* 移除队首元素 */
                 notEmpty.await();
         } finally {
             lock.unlock();
@@ -553,7 +553,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         return result;
     }
 
-    public E poll(long timeout, TimeUnit unit) throws InterruptedException {
+    public E poll(long timeout, TimeUnit unit) throws InterruptedException { /* 限时移除队首元素 -->队列空 -->等待 -->超时返回null */
         long nanos = unit.toNanos(timeout);
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
@@ -567,7 +567,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         return result;
     }
 
-    public E peek() {
+    public E peek() {  //查看队首元素
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {

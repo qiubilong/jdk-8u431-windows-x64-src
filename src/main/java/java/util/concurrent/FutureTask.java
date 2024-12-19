@@ -61,7 +61,7 @@ import java.util.concurrent.locks.LockSupport;
  * @param <V> The result type returned by this FutureTask's {@code get} methods
  */
 public class FutureTask<V> implements RunnableFuture<V> {
-    /*
+    /**
      * Revision notes: This differs from previous versions of this
      * class that relied on AbstractQueuedSynchronizer, mainly to
      * avoid surprising users about retaining interrupt status during
@@ -99,7 +99,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
     private static final int INTERRUPTED  = 6;
 
     /** The underlying callable; nulled out after running */
-    private Callable<V> callable;
+    private Callable<V> callable; /* 任务 */
     /** The result to return or exception to throw from get() */
     private Object outcome; // non-volatile, protected by state reads/writes
     /** The thread running the callable; CASed during run() */
@@ -149,7 +149,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @throws NullPointerException if the runnable is null
      */
     public FutureTask(Runnable runnable, V result) {
-        this.callable = Executors.callable(runnable, result);
+        this.callable = Executors.callable(runnable, result); /* Runnable适配Callale */
         this.state = NEW;       // ensure visibility of callable
     }
 

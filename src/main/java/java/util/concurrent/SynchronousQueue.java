@@ -85,7 +85,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     implements BlockingQueue<E>, java.io.Serializable {
     private static final long serialVersionUID = -3223113410248163686L;
 
-    /*
+    /**
      * This class implements extensions of the dual stack and dual
      * queue algorithms described in "Nonblocking Concurrent Objects
      * with Condition Synchronization", by W. N. Scherer III and
@@ -183,7 +183,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     }
 
     /** The number of CPUs, for spin control */
-    static final int NCPUS = Runtime.getRuntime().availableProcessors();
+    static final int NCPUS = Runtime.getRuntime().availableProcessors(); /* 操作系统可见处理器核数，也就是逻辑处理器核数 */
 
     /**
      * The number of times to spin before blocking in timed waits.
@@ -208,8 +208,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
     static final long spinForTimeoutThreshold = 1000L;
 
     /** Dual stack */
-    static final class TransferStack<E> extends Transferer<E> {
-        /*
+    static final class TransferStack<E> extends Transferer<E> { /* 非公平队列 */
+        /**
          * This extends Scherer-Scott dual stack algorithm, differing,
          * among other ways, by using "covering" nodes rather than
          * bit-marked pointers: Fulfilling operations push on marker
@@ -217,7 +217,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          * to match a waiting node.
          */
 
-        /* Modes for SNodes, ORed together in node fields */
+        /** Modes for SNodes, ORed together in node fields */
         /** Node represents an unfulfilled consumer */
         static final int REQUEST    = 0;
         /** Node represents an unfulfilled producer */
@@ -326,7 +326,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          */
         @SuppressWarnings("unchecked")
         E transfer(E e, boolean timed, long nanos) {
-            /*
+            /**
              * Basic algorithm is to loop trying one of three actions:
              *
              * 1. If apparently empty or already containing nodes of same
@@ -411,7 +411,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          * @return matched node, or s if cancelled
          */
         SNode awaitFulfill(SNode s, boolean timed, long nanos) {
-            /*
+            /**
              * When a node/thread is about to block, it sets its waiter
              * field and then rechecks state at least one more time
              * before actually parking, thus covering race vs

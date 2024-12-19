@@ -80,7 +80,7 @@ import sun.misc.SharedSecrets;
  * @author Josh Bloch, Doug Lea
  * @param <E> the type of elements held in this collection
  */
-public class PriorityQueue<E> extends AbstractQueue<E>   /* 优先级队列 */
+public class PriorityQueue<E> extends AbstractQueue<E>   /* 优先级队列 - 基于最小堆实现 */
     implements java.io.Serializable {
 
     private static final long serialVersionUID = -7720805057305804111L;
@@ -317,7 +317,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>   /* 优先级队列 */
      *         according to the priority queue's ordering
      * @throws NullPointerException if the specified element is null
      */
-    public boolean add(E e) {
+    public boolean add(E e) { /* 添加元素 */
         return offer(e);
     }
 
@@ -330,12 +330,12 @@ public class PriorityQueue<E> extends AbstractQueue<E>   /* 优先级队列 */
      *         according to the priority queue's ordering
      * @throws NullPointerException if the specified element is null
      */
-    public boolean offer(E e) {
+    public boolean offer(E e) {/* 添加元素 -->队列满 -->自动扩容 */
         if (e == null)
             throw new NullPointerException();
         modCount++;
         int i = size;
-        if (i >= queue.length)
+        if (i >= queue.length) /* 队列已满 --> 扩容 */
             grow(i + 1);
         size = i + 1;
         if (i == 0)
@@ -346,7 +346,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>   /* 优先级队列 */
     }
 
     @SuppressWarnings("unchecked")
-    public E peek() { /* 查看队首 */
+    public E peek() { /* 查看队首，也就是（最小）元素 */
         return (size == 0) ? null : (E) queue[0];
     }
 
@@ -583,7 +583,7 @@ public class PriorityQueue<E> extends AbstractQueue<E>   /* 优先级队列 */
     }
 
     @SuppressWarnings("unchecked")
-    public E poll() {
+    public E poll() { /* 移除队首元素，队列空，返回null */
         if (size == 0)
             return null;
         int s = --size;

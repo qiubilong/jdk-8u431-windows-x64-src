@@ -67,11 +67,11 @@ import java.util.*;
  * @author Doug Lea
  * @param <E> the type of elements held in this collection
  */
-public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
+public class DelayQueue<E extends Delayed> extends AbstractQueue<E> /* 延迟阻塞队列 - 基于优先级队列实现 */
     implements BlockingQueue<E> {
 
     private final transient ReentrantLock lock = new ReentrantLock();
-    private final PriorityQueue<E> q = new PriorityQueue<E>();
+    private final PriorityQueue<E> q = new PriorityQueue<E>(); /* 优先级队列 */
 
     /**
      * Thread designated to wait for the element at the head of
@@ -122,7 +122,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * @return {@code true} (as specified by {@link Collection#add})
      * @throws NullPointerException if the specified element is null
      */
-    public boolean add(E e) {
+    public boolean add(E e) { /* 添加元素 -->队列满 -->自动扩容 */
         return offer(e);
     }
 
@@ -133,14 +133,14 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * @return {@code true}
      * @throws NullPointerException if the specified element is null
      */
-    public boolean offer(E e) {
+    public boolean offer(E e) {/* 添加元素 -->队列满 -->自动扩容 */
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            q.offer(e);
+            q.offer(e);/* 插入数据 */
             if (q.peek() == e) {
                 leader = null;
-                available.signal();
+                available.signal(); /* 队列不空，数据可以消费事件 */
             }
             return true;
         } finally {
@@ -155,7 +155,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * @param e the element to add
      * @throws NullPointerException {@inheritDoc}
      */
-    public void put(E e) {
+    public void put(E e) {/* 添加元素 -->队列满 -->自动扩容 */
         offer(e);
     }
 
@@ -201,26 +201,26 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      * @return the head of this queue
      * @throws InterruptedException {@inheritDoc}
      */
-    public E take() throws InterruptedException {
+    public E take() throws InterruptedException { /* 移除队首元素 -->队列为空 或者 队首元素未到期 --> 挂起线程进行等待 */
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
             for (;;) {
-                E first = q.peek();
+                E first = q.peek(); /* 查看队首元素 */
                 if (first == null)
-                    available.await();
+                    available.await(); /* 队列为空 --> 挂起等待 */
                 else {
                     long delay = first.getDelay(NANOSECONDS);
                     if (delay <= 0)
-                        return q.poll();
+                        return q.poll();/* 数据到期，移除队首 */
                     first = null; // don't retain ref while waiting
                     if (leader != null)
-                        available.await();
+                        available.await(); /* 多消费者时，已经有线程在超时等待消费队首元素了，其他直接挂起 */
                     else {
                         Thread thisThread = Thread.currentThread();
                         leader = thisThread;
                         try {
-                            available.awaitNanos(delay);
+                            available.awaitNanos(delay); /* 超时等待 -->元素到期时，唤醒线程 */
                         } finally {
                             if (leader == thisThread)
                                 leader = null;
@@ -230,7 +230,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
             }
         } finally {
             if (leader == null && q.peek() != null)
-                available.signal();
+                available.signal();/* 队列不空 事件 */
             lock.unlock();
         }
     }

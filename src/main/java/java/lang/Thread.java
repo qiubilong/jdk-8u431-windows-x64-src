@@ -916,7 +916,7 @@ class Thread implements Runnable {
      * @revised 6.0
      * @spec JSR-51
      */
-    public void interrupt() {
+    public void interrupt() { /* 发送中断信号 -->如果线程在阻塞状态 --> 抛出InterruptedException */
         if (this != Thread.currentThread())
             checkAccess();
 
