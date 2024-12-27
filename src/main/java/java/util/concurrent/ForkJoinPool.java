@@ -3309,7 +3309,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @param blocker the blocker task
      * @throws InterruptedException if {@code blocker.block()} did so
      */
-    public static void managedBlock(ManagedBlocker blocker)
+    public static void managedBlock(ManagedBlocker blocker) /* 阻塞等待唤醒 */
         throws InterruptedException {
         ForkJoinPool p;
         ForkJoinWorkerThread wt;
@@ -3415,7 +3415,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Creates and returns the common pool, respecting user settings
      * specified via system properties.
      */
-    private static ForkJoinPool makeCommonPool() {
+    private static ForkJoinPool makeCommonPool() { /* 创建ForkJoinPool线程池 */
 
         final ForkJoinWorkerThreadFactory commonPoolForkJoinWorkerThreadFactory =
                 new CommonPoolForkJoinWorkerThreadFactory();

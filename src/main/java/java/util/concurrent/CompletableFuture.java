@@ -107,7 +107,7 @@ import java.util.concurrent.locks.LockSupport;
  * @author Doug Lea
  * @since 1.8
  */
-public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
+public class CompletableFuture<T> implements Future<T>, CompletionStage<T> { /* 异步任务编排，可链式、可转变结果、可设置（异常）回调 */
 
     /**
      * Overview:
@@ -214,7 +214,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * because they are only visible to other threads upon safe
      * publication.
      */
-
+    /* 任务结果 */
     volatile Object result;       // Either the result or boxed AltResult
     volatile Completion stack;    // Top of Treiber stack of dependent actions
 
@@ -238,7 +238,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         do {} while (!tryPushStack(c));
     }
 
-    /* ------------- Encoding and decoding outcomes -------------- */
+    /** ------------- Encoding and decoding outcomes -------------- */
 
     static final class AltResult { // See above
         final Throwable ex;        // null only for NIL
@@ -397,7 +397,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * Default executor -- ForkJoinPool.commonPool() unless it cannot
      * support parallelism.
      */
-    private static final Executor asyncPool = useCommonPool ?
+    private static final Executor asyncPool = useCommonPool ?   /* 默认ForkJoinPool线程池 */
         ForkJoinPool.commonPool() : new ThreadPerTaskExecutor();
 
     /** Fallback if ForkJoinPool.commonPool() cannot support parallelism */
@@ -467,8 +467,8 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * Pops and tries to trigger all reachable dependents.  Call only
      * when known to be done.
      */
-    final void postComplete() {
-        /*
+    final void postComplete() {/* 执行下一个任务 */
+        /**
          * On each step, variable f holds current dependents to pop
          * and run.  It is extended along only one path at a time,
          * pushing others to avoid unbounded recursion.
@@ -477,7 +477,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         while ((h = f.stack) != null ||
                (f != this && (h = (f = this).stack) != null)) {
             CompletableFuture<?> d; Completion t;
-            if (f.casStack(h, t = h.next)) {
+            if (f.casStack(h, t = h.next)) {/* 任务出栈 */
                 if (t != null) {
                     if (f != this) {
                         pushStack(h);
@@ -485,7 +485,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     }
                     h.next = null;    // detach
                 }
-                f = (d = h.tryFire(NESTED)) == null ? this : d;
+                f = (d = h.tryFire(NESTED)) == null ? this : d; /* 执行下一个任务 */
             }
         }
     }
@@ -1581,7 +1581,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
         return d;
     }
 
-    /* ------------- Zero-input Async forms -------------- */
+    /** ------------- Zero-input Async forms -------------- */
 
     @SuppressWarnings("serial")
     static final class AsyncSupply<T> extends ForkJoinTask<Void>
@@ -1601,7 +1601,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 dep = null; fn = null;
                 if (d.result == null) {
                     try {
-                        d.completeValue(f.get());
+                        d.completeValue(f.get());/* f.get()执行业务逻辑 --> d.completeValue设置任务结果 */
                     } catch (Throwable ex) {
                         d.completeThrowable(ex);
                     }
@@ -1615,7 +1615,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                                                      Supplier<U> f) {
         if (f == null) throw new NullPointerException();
         CompletableFuture<U> d = new CompletableFuture<U>();
-        e.execute(new AsyncSupply<U>(d, f));
+        e.execute(new AsyncSupply<U>(d, f));/* 执行任务 */
         return d;
     }
 
@@ -1637,13 +1637,13 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                 dep = null; fn = null;
                 if (d.result == null) {
                     try {
-                        f.run();
+                        f.run();  /* 执行任务 */
                         d.completeNull();
                     } catch (Throwable ex) {
                         d.completeThrowable(ex);
                     }
                 }
-                d.postComplete();
+                d.postComplete();/* 执行下一个任务 */
             }
         }
     }
@@ -1663,12 +1663,12 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * blocking actions pile up in ForkJoinPools.
      */
     @SuppressWarnings("serial")
-    static final class Signaller extends Completion
+    static final class Signaller extends Completion  /* 等待结果任务 */
         implements ForkJoinPool.ManagedBlocker {
         long nanos;                    // wait time if timed
         final long deadline;           // non-zero if timed
         volatile int interruptControl; // > 0: interruptible, < 0: interrupted
-        volatile Thread thread;
+        volatile Thread thread; /* 等待线程 */
 
         Signaller(boolean interruptible, long nanos, long deadline) {
             this.thread = Thread.currentThread();
@@ -1680,7 +1680,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             Thread w; // no need to atomically claim
             if ((w = thread) != null) {
                 thread = null;
-                LockSupport.unpark(w);
+                LockSupport.unpark(w); /* 唤醒线程 */
             }
             return null;
         }
@@ -1700,7 +1700,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             }
             return false;
         }
-        public boolean block() {
+        public boolean block() { /* 阻塞线程 */
             if (isReleasable())
                 return true;
             else if (deadline == 0L)
@@ -1729,9 +1729,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
                     --spins;
             }
             else if (q == null)
-                q = new Signaller(interruptible, 0L, 0L);
+                q = new Signaller(interruptible, 0L, 0L); /* 等待结果任务 */
             else if (!queued)
-                queued = tryPushStack(q);
+                queued = tryPushStack(q); /* 任务入栈 */
             else if (interruptible && q.interruptControl < 0) {
                 q.thread = null;
                 cleanStack();
@@ -1739,7 +1739,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
             }
             else if (q.thread != null && result == null) {
                 try {
-                    ForkJoinPool.managedBlock(q);
+                    ForkJoinPool.managedBlock(q); /* 阻塞等待唤醒 */
                 } catch (InterruptedException ie) {
                     q.interruptControl = -1;
                 }
@@ -1823,7 +1823,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * @param <U> the function's return type
      * @return the new CompletableFuture
      */
-    public static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier) {
+    public static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier) { /* 提交任务 - 默认ForkJoinPool线程池 */
         return asyncSupplyStage(asyncPool, supplier);
     }
 
@@ -1838,7 +1838,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * @param <U> the function's return type
      * @return the new CompletableFuture
      */
-    public static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier,
+    public static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier, /* 提交任务 - 指定线程池 */
                                                        Executor executor) {
         return asyncSupplyStage(screenExecutor(executor), supplier);
     }
@@ -1903,9 +1903,9 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * @throws InterruptedException if the current thread was interrupted
      * while waiting
      */
-    public T get() throws InterruptedException, ExecutionException {
+    public T get() throws InterruptedException, ExecutionException { /* 获取任务结果 */
         Object r;
-        return reportGet((r = result) == null ? waitingGet(true) : r);
+        return reportGet((r = result) == null ? waitingGet(true) : r); /* waitingGet阻塞等待结果 */
     }
 
     /**

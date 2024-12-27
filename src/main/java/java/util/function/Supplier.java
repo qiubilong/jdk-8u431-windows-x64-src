@@ -45,5 +45,5 @@ public interface Supplier<T> {
      *
      * @return a result
      */
-    T get();
+    T get(); /* 返回结果 */
 }
