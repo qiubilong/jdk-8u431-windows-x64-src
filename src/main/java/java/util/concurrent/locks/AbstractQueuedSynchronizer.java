@@ -1681,7 +1681,7 @@ public abstract class AbstractQueuedSynchronizer
          * case the waitStatus can be transiently and harmlessly wrong).
          */
         Node p = enq(node); /* 节点node加入获锁同步队列队尾，重新排队获锁 */
-        int ws = p.waitStatus;
+        int ws = p.waitStatus;/* 节点node的前节点 p */
         if (ws > 0 || !compareAndSetWaitStatus(p, ws, Node.SIGNAL))
             LockSupport.unpark(node.thread);  /* 如果获锁同步队列前一个节点线程取消排队就直接唤醒本节点线程，否则就等syn.release()释放锁时唤醒获锁同步队列首节点线程竞争获锁 */
         return true;

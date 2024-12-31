@@ -94,10 +94,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>   /* 数组阻塞队
     final Object[] items;  /* 队列数组 */
 
     /** items index for next take, poll, peek or remove */
-    int takeIndex;
+    int takeIndex; /* 消费数据 - 下标 */
 
     /** items index for next put, offer, or add */
-    int putIndex;
+    int putIndex; /* 存放数据 - 下标 */
 
     /** Number of elements in the queue */
     int count;  /* 元素数量 */
@@ -400,7 +400,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>   /* 数组阻塞队
         lock.lockInterruptibly();
         try {
             while (count == 0)
-                notEmpty.await();
+                notEmpty.await();//等待队列不空事件
             return dequeue(); /* 移除队首元素 */
         } finally {
             lock.unlock();

@@ -184,7 +184,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E> /* 无界 - 阻塞 
         final ReentrantLock putLock = this.putLock;
         putLock.lock();
         try {
-            notFull.signal();
+            notFull.signal(); /* 队列未满事件 --> 唤醒生产者 */
         } finally {
             putLock.unlock();
         }
