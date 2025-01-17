@@ -347,7 +347,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E> /* 无界 - 阻塞 
              * for all other uses of count in other wait guards.
              */
             while (count.get() == capacity) { /* 队列已满 --> 挂起线程等待 */
-                notFull.await();//等待队列不空事件
+                notFull.await();//等待队列未满事件
             }
             enqueue(node);/* 插入队尾 */
             c = count.getAndIncrement();

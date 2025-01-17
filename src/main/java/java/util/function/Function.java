@@ -46,7 +46,7 @@ public interface Function<T, R> {
      * @param t the function argument
      * @return the function result
      */
-    R apply(T t);
+    R apply(T t); /* 一个参数 - 生成结果 */
 
     /**
      * Returns a composed function that first applies the {@code before}

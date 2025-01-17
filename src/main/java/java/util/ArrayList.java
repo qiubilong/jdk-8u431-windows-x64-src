@@ -104,7 +104,7 @@ import sun.misc.SharedSecrets;
  * @since   1.2
  */
 
-public class ArrayList<E> extends AbstractList<E>
+public class ArrayList<E> extends AbstractList<E> /* 连续内存空间 - 数组 */
         implements List<E>, RandomAccess, Cloneable, java.io.Serializable
 {
     private static final long serialVersionUID = 8683452581122892189L;
@@ -131,15 +131,15 @@ public class ArrayList<E> extends AbstractList<E>
      * The capacity of the ArrayList is the length of this array buffer. Any
      * empty ArrayList with elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA
      * will be expanded to DEFAULT_CAPACITY when the first element is added.
-     */
-    transient Object[] elementData; // non-private to simplify nested class access 数据数组
+     */                              /* 元素数组 */
+    transient Object[] elementData; // non-private to simplify nested class access
 
     /**
      * The size of the ArrayList (the number of elements it contains).
      *
      * @serial
      */
-    private int size;
+    private int size;             /* 数组中元素个数 */
 
     /**
      * Constructs an empty list with the specified initial capacity.
@@ -150,7 +150,7 @@ public class ArrayList<E> extends AbstractList<E>
      */
     public ArrayList(int initialCapacity) {
         if (initialCapacity > 0) {
-            this.elementData = new Object[initialCapacity];
+            this.elementData = new Object[initialCapacity]; /* 指定数组大小 */
         } else if (initialCapacity == 0) {
             this.elementData = EMPTY_ELEMENTDATA;
         } else {
@@ -222,23 +222,23 @@ public class ArrayList<E> extends AbstractList<E>
         }
     }
 
-    private static int calculateCapacity(Object[] elementData, int minCapacity) {
+    private static int calculateCapacity(Object[] elementData, int minCapacity) { // minCapacity = size +1
         if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
-            return Math.max(DEFAULT_CAPACITY, minCapacity);
+            return Math.max(DEFAULT_CAPACITY, minCapacity);/* 第一次初始化数组 */
         }
         return minCapacity;
     }
-
-    private void ensureCapacityInternal(int minCapacity) {
-        ensureExplicitCapacity(calculateCapacity(elementData, minCapacity));// 检查数组大小 calculateCapacity(elementData, minCapacity)
+    /* 计算必须的数组大小 */
+    private void ensureCapacityInternal(int minCapacity) { //minCapacity = size + 1
+        ensureExplicitCapacity(calculateCapacity(elementData, minCapacity));// 计算必须的数组大小 calculateCapacity(elementData, minCapacity)
     }
 
-    private void ensureExplicitCapacity(int minCapacity) { /* minCapacity == 需要的数组长度 */
+    private void ensureExplicitCapacity(int minCapacity) { /* minCapacity == 期望的数组长度 */
         modCount++;
 
         // overflow-conscious code
-        if (minCapacity - elementData.length > 0) /* 数组长度不够，扩容 */
-            grow(minCapacity);
+        if (minCapacity - elementData.length > 0)
+            grow(minCapacity);/* 数组长度不够，扩容 */
     }
 
     /**
@@ -460,7 +460,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @param e element to be appended to this list
      * @return <tt>true</tt> (as specified by {@link Collection#add})
      */
-    public boolean add(E e) {
+    public boolean add(E e) { /* 添加元素，时间复杂度为O(1) */
         ensureCapacityInternal(size + 1);  // Increments modCount!!
         elementData[size++] = e;
         return true;
@@ -494,13 +494,13 @@ public class ArrayList<E> extends AbstractList<E>
      * @return the element that was removed from the list
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
-    public E remove(int index) {
+    public E remove(int index) { /* 删除数组元素 */
         rangeCheck(index);
 
         modCount++;
         E oldValue = elementData(index);
 
-        int numMoved = size - index - 1;
+        int numMoved = size - index - 1; /* 删除末尾的元素，不需要移动copy数组，时间复杂度为O(1) */
         if (numMoved > 0)
             System.arraycopy(elementData, index+1, elementData, index,
                              numMoved);
@@ -539,7 +539,7 @@ public class ArrayList<E> extends AbstractList<E>
         return false;
     }
 
-    /*
+    /**
      * Private remove method that skips bounds checking and does not
      * return the value removed.
      */
@@ -838,27 +838,27 @@ public class ArrayList<E> extends AbstractList<E>
      *
      * @return an iterator over the elements in this list in proper sequence
      */
-    public Iterator<E> iterator() {
+    public Iterator<E> iterator() { /* for（Object o :list）遍历迭代器 */
         return new Itr();
     }
 
     /**
      * An optimized version of AbstractList.Itr
      */
-    private class Itr implements Iterator<E> {
-        int cursor;       // index of next element to return  -- 下一个数据下标
-        int lastRet = -1; // index of last element returned; -1 if no such -- 最后访问数据下标
+    private class Itr implements Iterator<E> { /* Fast-Fail模式遍历数组 */
+        int cursor;       // index of next element to return  -- 遍历数据下标，指向下一个待访问数据的下标 , cursor = lastRet + 1;
+        int lastRet = -1; // index of last element returned; -1 if no such -- 最后访问的数据下标
         int expectedModCount = modCount;
 
         Itr() {}
 
-        public boolean hasNext() {
+        public boolean hasNext() {/* 还有元素 */
             return cursor != size; // cursor < size
         }
 
         @SuppressWarnings("unchecked")
-        public E next() {
-            checkForComodification();
+        public E next() { /* 下一个元素 */
+            checkForComodification();// if (modCount != expectedModCount)  throw new ConcurrentModificationException()
             int i = cursor;
             if (i >= size)
                 throw new NoSuchElementException();
@@ -869,13 +869,13 @@ public class ArrayList<E> extends AbstractList<E>
             return (E) elementData[lastRet = i];
         }
 
-        public void remove() {  /* 直接删除最后一个访问的数据 */
+        public void remove() {  /* 利用迭代器，能删除最后访问的元素，保证正常遍历数组 */
             if (lastRet < 0)
-                throw new IllegalStateException();
-            checkForComodification();
+                throw new IllegalStateException();//不能连续两次remove()
+            checkForComodification();// if (modCount != expectedModCount)  throw new ConcurrentModificationException()
 
             try {
-                ArrayList.this.remove(lastRet);
+                ArrayList.this.remove(lastRet);/* 删除最后访问的元素 */
                 cursor = lastRet;
                 lastRet = -1;
                 expectedModCount = modCount;
@@ -1256,7 +1256,7 @@ public class ArrayList<E> extends AbstractList<E>
         final E[] elementData = (E[]) this.elementData;
         final int size = this.size;
         for (int i=0; modCount == expectedModCount && i < size; i++) {
-            action.accept(elementData[i]);
+            action.accept(elementData[i]);/* 遍历数组，消费数据 t */
         }
         if (modCount != expectedModCount) {
             throw new ConcurrentModificationException();
@@ -1284,7 +1284,7 @@ public class ArrayList<E> extends AbstractList<E>
     /** Index-based split-by-two, lazily initialized Spliterator */
     static final class ArrayListSpliterator<E> implements Spliterator<E> {
 
-        /*
+        /**
          * If ArrayLists were immutable, or structurally immutable (no
          * adds, removes, etc), we could implement their spliterators
          * with Arrays.spliterator. Instead we detect as much

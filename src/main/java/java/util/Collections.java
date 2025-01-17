@@ -2001,7 +2001,7 @@ public class Collections {
         private static final long serialVersionUID = 3053995032091335093L;
 
         final Collection<E> c;  // Backing Collection
-        final Object mutex;     // Object on which to synchronize
+        final Object mutex;     // Object on which to synchronize //synchronized锁对象
 
         SynchronizedCollection(Collection<E> c) {
             this.c = Objects.requireNonNull(c);
@@ -2390,7 +2390,7 @@ public class Collections {
     /**
      * @serial include
      */
-    static class SynchronizedList<E>
+    static class SynchronizedList<E> /* 安全包装集合 */
         extends SynchronizedCollection<E>
         implements List<E> {
         private static final long serialVersionUID = -7754090372962971524L;

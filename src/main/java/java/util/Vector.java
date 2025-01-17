@@ -83,7 +83,7 @@ import java.util.function.UnaryOperator;
  * @see LinkedList
  * @since   JDK1.0
  */
-public class Vector<E>
+public class Vector<E>  /* 线程安全的数组列表 */
     extends AbstractList<E>
     implements List<E>, RandomAccess, Cloneable, java.io.Serializable
 {

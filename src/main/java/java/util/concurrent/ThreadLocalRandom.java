@@ -954,7 +954,7 @@ public class ThreadLocalRandom extends Random {
 
     // Within-package utilities
 
-    /*
+    /**
      * Descriptions of the usages of the methods below can be found in
      * the classes that use them. Briefly, a thread's "probe" value is
      * a non-zero hash code that (probably) does not collide with

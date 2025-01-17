@@ -83,7 +83,7 @@ import sun.misc.SharedSecrets;
  * @since   1.6
  * @param <E> the type of elements held in this collection
  */
-public class ArrayDeque<E> extends AbstractCollection<E>
+public class ArrayDeque<E> extends AbstractCollection<E> /* 双端数组列表，可代替Stack */
                            implements Deque<E>, Cloneable, Serializable
 {
     /**
@@ -96,7 +96,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * other.  We also guarantee that all array cells not holding
      * deque elements are always null.
      */
-    transient Object[] elements; // non-private to simplify nested class access
+    transient Object[] elements; // non-private to simplify nested class access //循环数组
 
     /**
      * The index of the element at the head of the deque (which is the
@@ -109,7 +109,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * The index at which the next element would be added to the tail
      * of the deque (via addLast(E), add(E), or push(E)).
      */
-    transient int tail;
+    transient int tail; /* 下一个可用空间 */
 
     /**
      * The minimum capacity that we'll use for a newly created deque.
@@ -231,8 +231,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     public void addFirst(E e) {
         if (e == null)
             throw new NullPointerException();
-        elements[head = (head - 1) & (elements.length - 1)] = e;
-        if (head == tail)
+        elements[head = (head - 1) & (elements.length - 1)] = e; //(head - 1) & (elements.length - 1)下标为负数时，从队尾循环
+        if (head == tail)/* 数组满 */
             doubleCapacity();
     }
 
@@ -248,7 +248,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         if (e == null)
             throw new NullPointerException();
         elements[tail] = e;
-        if ( (tail = (tail + 1) & (elements.length - 1)) == head)
+        if ( (tail = (tail + 1) & (elements.length - 1)) == head)/* 数组已满 */
             doubleCapacity();
     }
 
@@ -489,7 +489,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * @return the head of the queue represented by this deque, or
      *         {@code null} if this deque is empty
      */
-    public E peek() {
+    public E peek() { /* 栈 - 查看栈顶 */
         return peekFirst();
     }
 
@@ -504,7 +504,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * @param e the element to push
      * @throws NullPointerException if the specified element is null
      */
-    public void push(E e) {
+    public void push(E e) { /* 栈 - 入栈 */
         addFirst(e);
     }
 
@@ -518,7 +518,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      *         of the stack represented by this deque)
      * @throws NoSuchElementException {@inheritDoc}
      */
-    public E pop() {
+    public E pop() {/* 栈 - 出栈 */
         return removeFirst();
     }
 

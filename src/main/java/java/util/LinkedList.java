@@ -137,7 +137,7 @@ public class LinkedList<E>  /* 双向链表 */
     /**
      * Links e as last element.
      */
-    void linkLast(E e) {
+    void linkLast(E e) { /* 添加到队尾 */
         final Node<E> l = last;
         final Node<E> newNode = new Node<>(l, e, null);
         last = newNode; /* 新尾结点 */
@@ -967,7 +967,7 @@ public class LinkedList<E>  /* 双向链表 */
         }
     }
 
-    private static class Node<E> {
+    private static class Node<E> { /* 双向链表节点 */
         E item;          /* 元素数据 */
         Node<E> next;    /* 后继节点 */
         Node<E> prev;    /* 前驱节点 */

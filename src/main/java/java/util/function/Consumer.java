@@ -46,7 +46,7 @@ public interface Consumer<T> {
      *
      * @param t the input argument
      */
-    void accept(T t);
+    void accept(T t); /* 消费数据T */
 
     /**
      * Returns a composed {@code Consumer} that performs, in sequence, this

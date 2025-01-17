@@ -46,7 +46,7 @@ package java.util;
  * @since   JDK1.0
  */
 public
-class Stack<E> extends Vector<E> {
+class Stack<E> extends Vector<E> { /* 线程安全的栈，已废弃。推荐使用ArrayDeque */
     /**
      * Creates an empty Stack.
      */
